@@ -1,49 +1,97 @@
-import {calcTotalPrice} from './sort/total-price.js';
-import {createEditPointForm} from './components/edit-point-form.js';
-import {createFilter} from './components/filter.js';
-import {createInfo} from './components/info.js';
-import {createMenu} from './components/menu.js';
-import {createPointList} from './components/point-list.js';
-import {createSort} from './components/sort.js';
-import {createTotalPrice} from './components/total-price.js';
+import FilterComponent from './components/filter.js';
+import InfoComponent from './components/info.js';
+import MenuComponent from './components/menu.js';
+import PointComponent from './components/point.js';
+import PointDayComponent from './components/point-day.js';
+import PointEditComponent from './components/point-edit.js';
+import PointListComponent from './components/point-list.js';
+import SortComponent from './components/sort.js';
+import TotalPriceComponent from './components/total-price.js';
 
 import {generatePoints} from './mock/point.js';
 import {getTripDates, sortPoints, selectDestinations} from './sort/start-sort.js';
+import {calcTotalPrice} from './sort/total-price.js';
+import {render, RenderPosition} from "./utils.js";
+
 
 const COUNT_OF_POINTS = 15;
-
-
+// ------------------------------------------------
+// Генерация событий (моки)
 const points = generatePoints(COUNT_OF_POINTS);
-
-const sortedPoints = sortPoints(points.slice(1));
+// Сортировка и группировка событий по дням
+const sortedPoints = sortPoints(points.slice());
+// Вычисление дат начала и окончания путешествия
 const datesOfTrip = getTripDates(sortedPoints);
+// Вычисление всех мест маршрута
+const destinations = selectDestinations(points.slice());
+// Вычиление общей стоимости путешествия
+const totalPrice = calcTotalPrice(points.slice());
+// ------------------------------------------------
 
-const destinations = selectDestinations(points.slice(1));
-const totalPrice = calcTotalPrice(points.slice(1));
-
-
-const renderHTMLElements = (container, block, place) => container.insertAdjacentHTML(place, block);
 
 // Шапка: информация, меню, фильтр
 const headerMainBlock = document.querySelector(`.trip-main`);
-renderHTMLElements(headerMainBlock, createInfo(destinations, datesOfTrip), `afterbegin`);
+render(headerMainBlock, new InfoComponent(destinations, datesOfTrip).getElement(), RenderPosition.AFTERBEGIN);
 
+// ------------------------------------------------
 const tripMainInfo = headerMainBlock.querySelector(`.trip-info`);
-renderHTMLElements(tripMainInfo, createTotalPrice(totalPrice), `beforeend`);
+render(tripMainInfo, new TotalPriceComponent(totalPrice).getElement(), RenderPosition.BEFOREEND);
 
+// ------------------------------------------------
 const menuBlock = headerMainBlock.querySelector(`#menu-block`);
 const filterBlock = headerMainBlock.querySelector(`#events-filter`);
-
-renderHTMLElements(menuBlock, createMenu(), `afterend`);
-renderHTMLElements(filterBlock, createFilter(), `afterend`);
+render(menuBlock, new MenuComponent().getElement(), RenderPosition.AFTEREND);
+render(filterBlock, new FilterComponent().getElement(), RenderPosition.AFTEREND);
+// ------------------------------------------------
 
 
 // Контент: сортировка, события, редактирование
 const pointsListBlock = document.querySelector(`.trip-events`);
+render(pointsListBlock, new SortComponent().getElement(), RenderPosition.BEFOREEND);
+render(pointsListBlock, new PointListComponent().getElement(), RenderPosition.BEFOREEND);
 
 
-renderHTMLElements(pointsListBlock, createSort(), `beforeend`);
-renderHTMLElements(pointsListBlock, createEditPointForm(points[0], destinations), `beforeend`);
+const pointList = pointsListBlock.querySelector(`.trip-days`);
 
-renderHTMLElements(pointsListBlock, createPointList(sortedPoints), `beforeend`);
+
+const renderPoint = (container, ...params) => {
+  const [point, index] = params;
+
+  const onEditButtonClick = () => {
+    container.replaceChild(pointEditElement.getElement(), pointElement.getElement());
+  };
+
+  const onCloseButtonClick = () => {
+    container.replaceChild(pointElement.getElement(), pointEditElement.getElement());
+  };
+
+  const pointElement = new PointComponent(point, index);
+  const editButton = pointElement.getElement().querySelector(`.event__rollup-btn`);
+  editButton.addEventListener(`click`, onEditButtonClick);
+
+  const pointEditElement = new PointEditComponent(point, destinations);
+  const closeButton = pointEditElement.getElement().querySelector(`.event__rollup-btn`);
+  closeButton.addEventListener(`click`, onCloseButtonClick);
+
+
+  render(container, pointElement.getElement(), RenderPosition.BEFOREEND);
+};
+
+const renderPointDay = (container, ...params) => {
+  const [pointDay, index] = params;
+  const {date, [`events`]: pointDayList} = pointDay;
+
+  const pointDayElement = new PointDayComponent(date, index);
+  const pointDayListBlock = pointDayElement.getElement().querySelector(`.trip-events__list`);
+
+  pointDayList.forEach((point) => {
+    renderPoint(pointDayListBlock, point);
+  });
+
+  render(container, pointDayElement.getElement(), RenderPosition.BEFOREEND);
+};
+
+sortedPoints.forEach((pointDay, index) => {
+  renderPointDay(pointList, pointDay, index);
+});
 
