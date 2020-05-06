@@ -5,22 +5,28 @@ const MAX_DESTINATIONS_TO_SHOW = 3;
 
 
 const formatDestInterval = (arr) => {
-  if (arr.length > MAX_DESTINATIONS_TO_SHOW) {
-    return `${arr[0] + ` &mdash; ... &mdash; ` + arr[arr.length - 1]}`;
-  } else {
-    return `${arr.map((el, index) => {
-      return index !== arr.length - 1 ? `${el + ` &mdash; `}` : el;
-    }).join(`\n`)}`;
-  }
+  if (arr) {
+    if (arr.length > MAX_DESTINATIONS_TO_SHOW) {
+      return `${arr[0] + ` &mdash; ... &mdash; ` + arr[arr.length - 1]}`;
+    } else {
+      return `${arr.map((el, index) => {
+        return index !== arr.length - 1 ? `${el + ` &mdash; `}` : el;
+      }).join(`\n`)}`;
+    }
+  } return ``;
 };
 
 const createInfoTemplate = (destinations, dates) => {
-  const {start, finish} = dates;
-  const datesTemplate = `
+  let datesTemplate = ``;
+
+  if (dates) {
+    const {start, finish} = dates;
+    datesTemplate = `
     ${MONTHS[start.getMonth()] === MONTHS[finish.getMonth()]
     ? `${MONTHS[start.getMonth()]} ${start.getDate()}&nbsp;&mdash;&nbsp; ${finish.getDate()}`
     : `${MONTHS[start.getMonth()]} ${start.getDate()}&nbsp;&mdash;&nbsp; ${MONTHS[finish.getMonth()]} ${finish.getDate()}`}
     `;
+  }
 
   return `<section class="trip-main__trip-info  trip-info">
       <div class="trip-info__main">
