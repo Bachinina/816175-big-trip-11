@@ -1,4 +1,4 @@
-import {EVENT_TYPES} from "../const.js";
+import {EventType} from "../const.js";
 import {generateOffers} from "./point-offers.js";
 import {generateDate} from './point-date.js';
 import {selectRandomArrElement, selectRandomNumber} from "../utils.js";
@@ -43,7 +43,7 @@ export const generatePhotosArr = (length) => {
 
 
 const generatePoint = (id) => {
-  const type = selectRandomArrElement(EVENT_TYPES);
+  const type = selectRandomArrElement(EventType.ALL);
   const pointDate = generateDate();
   return {
     type,
