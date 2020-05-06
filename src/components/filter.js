@@ -12,8 +12,7 @@ const createFilterItemTemplate = (filters) => {
 };
 
 export const createFilterTemplate = () => {
-  return `
-    <form class="trip-filters" action="#" method="get">
+  return `<form class="trip-filters" action="#" method="get">
         ${createFilterItemTemplate(FILTER_TITLES)}
       <button class="visually-hidden" type="submit">Accept filter</button>
     </form>`;

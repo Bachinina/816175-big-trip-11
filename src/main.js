@@ -1,6 +1,7 @@
 import FilterComponent from './components/filter.js';
 import InfoComponent from './components/info.js';
 import MenuComponent from './components/menu.js';
+import NoPointsComponent from './components/no-points.js';
 import PointComponent from './components/point.js';
 import PointDayComponent from './components/point-day.js';
 import PointEditComponent from './components/point-edit.js';
@@ -14,18 +15,20 @@ import {calcTotalPrice} from './sort/total-price.js';
 import {render, RenderPosition} from "./utils.js";
 
 
-const COUNT_OF_POINTS = 15;
+const COUNT_OF_POINTS = 1;
 // ------------------------------------------------
 // Генерация событий (моки)
 const points = generatePoints(COUNT_OF_POINTS);
+const arePoints = points.length > 0;
+
 // Сортировка и группировка событий по дням
-const sortedPoints = sortPoints(points.slice());
+const sortedPoints = arePoints > 0 ? sortPoints(points.slice()) : ``;
 // Вычисление дат начала и окончания путешествия
-const datesOfTrip = getTripDates(sortedPoints);
+const datesOfTrip = arePoints > 0 ? getTripDates(sortedPoints) : ``;
 // Вычисление всех мест маршрута
-const destinations = selectDestinations(points.slice());
+const destinations = arePoints > 0 ? selectDestinations(points.slice()) : ``;
 // Вычиление общей стоимости путешествия
-const totalPrice = calcTotalPrice(points.slice());
+const totalPrice = arePoints > 0 ? calcTotalPrice(points.slice()) : 0;
 // ------------------------------------------------
 
 
@@ -47,31 +50,35 @@ render(filterBlock, new FilterComponent().getElement(), RenderPosition.AFTEREND)
 
 // Контент: сортировка, события, редактирование
 const pointsListBlock = document.querySelector(`.trip-events`);
-render(pointsListBlock, new SortComponent().getElement(), RenderPosition.BEFOREEND);
-render(pointsListBlock, new PointListComponent().getElement(), RenderPosition.BEFOREEND);
-
-
-const pointList = pointsListBlock.querySelector(`.trip-days`);
-
 
 const renderPoint = (container, ...params) => {
   const [point, index] = params;
 
-  const onEditButtonClick = () => {
-    container.replaceChild(pointEditElement.getElement(), pointElement.getElement());
+  const onEscKeyDown = (evt) => {
+    const isEscKey = evt.key === `Escape` || evt.key === `Esc`;
+    if (isEscKey) {
+      replaceEditToPoint();
+    }
   };
 
-  const onCloseButtonClick = () => {
+  const replacePointToEdit = () => {
+    container.replaceChild(pointEditElement.getElement(), pointElement.getElement());
+    document.addEventListener(`keydown`, onEscKeyDown);
+  };
+
+  const replaceEditToPoint = () => {
     container.replaceChild(pointElement.getElement(), pointEditElement.getElement());
+    document.removeEventListener(`keydown`, onEscKeyDown);
   };
 
   const pointElement = new PointComponent(point, index);
   const editButton = pointElement.getElement().querySelector(`.event__rollup-btn`);
-  editButton.addEventListener(`click`, onEditButtonClick);
+  editButton.addEventListener(`click`, replacePointToEdit);
 
   const pointEditElement = new PointEditComponent(point, destinations);
   const closeButton = pointEditElement.getElement().querySelector(`.event__rollup-btn`);
-  closeButton.addEventListener(`click`, onCloseButtonClick);
+  closeButton.addEventListener(`click`, replaceEditToPoint);
+  pointEditElement.getElement().addEventListener(`submit`, replaceEditToPoint);
 
 
   render(container, pointElement.getElement(), RenderPosition.BEFOREEND);
@@ -91,7 +98,14 @@ const renderPointDay = (container, ...params) => {
   render(container, pointDayElement.getElement(), RenderPosition.BEFOREEND);
 };
 
-sortedPoints.forEach((pointDay, index) => {
-  renderPointDay(pointList, pointDay, index);
-});
+if (arePoints) {
+  render(pointsListBlock, new SortComponent().getElement(), RenderPosition.BEFOREEND);
+  render(pointsListBlock, new PointListComponent().getElement(), RenderPosition.BEFOREEND);
 
+  const pointList = pointsListBlock.querySelector(`.trip-days`);
+  sortedPoints.forEach((pointDay, index) => {
+    renderPointDay(pointList, pointDay, index);
+  });
+} else {
+  render(pointsListBlock, new NoPointsComponent().getElement(), RenderPosition.BEFOREEND);
+}
