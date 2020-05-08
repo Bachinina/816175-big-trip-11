@@ -1,5 +1,6 @@
+import AbstractComponent from "./abstract-component.js";
 import {EventType} from "../const.js";
-import {createElement, formatTime, formatTimeInterval} from "../utils.js";
+import {formatTime, formatTimeInterval} from "../utils/common.js";
 
 const MAX_OFFERS_TO_SHOW = 3;
 
@@ -27,7 +28,7 @@ const createPointTemplate = (point) => {
   const {[`name`]: name} = destination;
 
   const offersList = offers[`offers`];
-  const areOffers = offersList.length > 0;
+  const isOffersSetExisted = offersList.length > 0;
 
   const pointTitle = `
     ${type}
@@ -58,7 +59,7 @@ const createPointTemplate = (point) => {
           &euro;&nbsp;<span class="event__price-value">${price}</span>
         </p>
 
-        ${areOffers ? `<h4 class="visually-hidden">Offers:</h4>
+        ${isOffersSetExisted ? `<h4 class="visually-hidden">Offers:</h4>
             <ul class="event__selected-offers">
               ${offersList.slice(0, MAX_OFFERS_TO_SHOW).map((offer) => createOfferTemplate(offer)).join(`\n`)}
             </ul>` : ``}
@@ -70,24 +71,17 @@ const createPointTemplate = (point) => {
     </li>`;
 };
 
-export default class Point {
+export default class Point extends AbstractComponent {
   constructor(point) {
+    super();
     this._point = point;
-    this._element = null;
   }
 
   getTemplate() {
     return createPointTemplate(this._point);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
+  setEditButtonClickHandler(cb) {
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, cb);
   }
 }

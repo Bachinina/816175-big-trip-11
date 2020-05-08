@@ -1,4 +1,4 @@
-import {selectRandomArrElement, selectRandomNumber} from "../utils.js";
+import {selectRandomArrElement, selectRandomNumber} from "../utils/common.js";
 
 const MIN_OFFER_NUMBER = 0;
 const MAX_OFFER_NUMBER = 5;

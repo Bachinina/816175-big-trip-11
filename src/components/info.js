@@ -1,5 +1,5 @@
+import AbstractComponent from "./abstract-component.js";
 import {MONTHS} from "../const.js";
-import {createElement} from "../utils.js";
 
 const MAX_DESTINATIONS_TO_SHOW = 3;
 
@@ -39,25 +39,14 @@ const createInfoTemplate = (destinations, dates) => {
     </section>`;
 };
 
-export default class Info {
+export default class Info extends AbstractComponent {
   constructor(destinations, dates) {
+    super();
     this._destinations = destinations;
     this._dates = dates;
-    this._element = null;
   }
 
   getTemplate() {
     return createInfoTemplate(this._destinations, this._dates);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }

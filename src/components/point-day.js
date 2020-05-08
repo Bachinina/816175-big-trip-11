@@ -1,5 +1,5 @@
+import AbstractComponent from "./abstract-component.js";
 import {MONTHS} from "../const.js";
-import {createElement} from "../utils.js";
 
 
 const createPointDayTemplate = (date, index) => {
@@ -15,25 +15,14 @@ const createPointDayTemplate = (date, index) => {
 };
 
 
-export default class PointDay {
+export default class PointDay extends AbstractComponent {
   constructor(date, index) {
+    super();
     this._date = date;
     this._index = index;
-    this._element = null;
   }
 
   getTemplate() {
     return createPointDayTemplate(this._date, this._index);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }

@@ -1,4 +1,4 @@
-import {selectRandomNumber} from "../utils.js";
+import {selectRandomNumber} from "../utils/common.js";
 
 const MIN_DATE = 7;
 const MAX_DATE = 15;

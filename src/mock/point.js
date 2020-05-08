@@ -1,7 +1,7 @@
 import {EventType} from "../const.js";
 import {generateOffers} from "./point-offers.js";
 import {generateDate} from './point-date.js';
-import {selectRandomArrElement, selectRandomNumber} from "../utils.js";
+import {selectRandomArrElement, selectRandomNumber} from "../utils/common.js";
 
 
 const DESTINATIONS = [`Madrid`, `Moscow`, `Helsinki`, `Paris`];
