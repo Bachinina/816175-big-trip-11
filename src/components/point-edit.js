@@ -1,5 +1,6 @@
+import AbstractComponent from "./abstract-component.js";
 import {EventType} from "../const.js";
-import {createElement, formatDate} from "../utils.js";
+import {formatDate} from "../utils/common.js";
 
 const createOffersTemplate = (offers) => {
   return offers.map((offer, index) => {
@@ -68,10 +69,10 @@ const createPointEditTemplate = (point, allDestinations) => {
   const {description, name, pictures} = destination;
 
   const offersList = offers[`offers`];
-  const areOffers = offersList.length > 0;
+  const isOffersSetExisted = offersList.length > 0;
 
   const isDescription = !!description;
-  const arePictures = pictures.length > 0;
+  const isPicturesSetExisted = pictures.length > 0;
 
   return `<form class="trip-events__item  event  event--edit" action="#" method="post">
       <header class="event__header">
@@ -136,7 +137,7 @@ const createPointEditTemplate = (point, allDestinations) => {
       </header>
 
       <section class="event__details">
-        ${areOffers ? `
+        ${isOffersSetExisted ? `
         <section class="event__section  event__section--offers">
           <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
@@ -146,12 +147,12 @@ const createPointEditTemplate = (point, allDestinations) => {
         </section>
         ` : ``}
 
-        ${isDescription || arePictures ? `
+        ${isDescription || isPicturesSetExisted ? `
           <section class="event__section  event__section--destination">
             <h3 class="event__section-title  event__section-title--destination">Destination</h3>
             ${isDescription ? `<p class="event__destination-description">${description}</p>` : ``}
 
-            ${arePictures ? `
+            ${isPicturesSetExisted ? `
               <div class="event__photos-container">
                 <div class="event__photos-tape">
                   ${createPhotosTemplate(pictures)}
@@ -164,25 +165,22 @@ const createPointEditTemplate = (point, allDestinations) => {
     </form>`;
 };
 
-export default class PointEdit {
+export default class PointEdit extends AbstractComponent {
   constructor(point, destinations) {
+    super();
     this._point = point;
     this._destinations = destinations;
-    this._element = null;
   }
 
   getTemplate() {
     return createPointEditTemplate(this._point, this._destinations);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
+  setFormSubmitHandler(cb) {
+    this.getElement().addEventListener(`submit`, cb);
   }
 
-  removeElement() {
-    this._element = null;
+  setCloseButtonClickHandler(cb) {
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, cb);
   }
 }
