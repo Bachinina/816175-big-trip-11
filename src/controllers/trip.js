@@ -12,7 +12,6 @@ import {render, replace, RenderPosition} from "../utils/render.js";
 
 let tripDestinations;
 
-
 const sortPoints = (points, sortType) => {
   const pointsForSort = points.slice();
   let sortedPoints = [];
@@ -32,6 +31,22 @@ const sortPoints = (points, sortType) => {
   }
   return sortedPoints;
 };
+
+const renderPointsBySortType = (list, sortedPoints, sortType) => {
+  if (sortType === SortType.EVENT) {
+    sortedPoints.forEach((pointDay, index) => {
+      renderPointDay(list, pointDay, index);
+    });
+  } else {
+    const container = new PointDayComponent();
+    render(list, container, RenderPosition.BEFOREEND);
+
+    sortedPoints.forEach((point) => {
+      renderPoint(container.getPointDayListBlock(), point);
+    });
+  }
+};
+
 
 const renderPoint = (container, ...params) => {
   const [point, index] = params;
@@ -102,25 +117,16 @@ export default class TripController {
     const pointList = this._container.querySelector(`.trip-days`);
 
     this._sortComponent.setSortTypeChangeHandler((sortType) => {
+      const sortedPoints = sortPoints(points, sortType);
       pointList.innerHTML = ``;
 
-      if (sortType === SortType.EVENT) {
-        sortPoints(points, sortType).forEach((pointDay, index) => {
-          renderPointDay(pointList, pointDay, index);
-        });
-      } else {
-        const container = new PointDayComponent();
-        render(pointList, container, RenderPosition.BEFOREEND);
-
-        sortPoints(points, sortType).forEach((point) => {
-          renderPoint(container.getPointDayListBlock(), point);
-        });
-      }
+      renderPointsBySortType(pointList, sortedPoints, sortType);
     });
 
-
-    sortPoints(points, SortType.EVENT).forEach((pointDay, index) => {
-      renderPointDay(pointList, pointDay, index);
-    });
+    renderPointsBySortType(
+        pointList,
+        sortPoints(points, this._sortComponent.getSortType()),
+        this._sortComponent.getSortType()
+    );
   }
 }
