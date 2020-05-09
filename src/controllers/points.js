@@ -1,12 +1,12 @@
 import {generatePoints} from '../mock/point.js';
 import {getTripDates, getTripDestinations} from '../calculations/info.js';
-import {sortPointsByDate} from '../calculations/common.js';
+import {sortPointsByTime} from '../calculations/points.js';
 import {calcTotalPrice} from '../calculations/total-price.js';
 
 
 export default class PointsController {
   constructor(count) {
-    this._points = sortPointsByDate(generatePoints(count));
+    this._points = sortPointsByTime(generatePoints(count));
 
     this._datesOfTrip = ``;
     this._destinations = ``;
