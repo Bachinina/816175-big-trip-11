@@ -24,6 +24,10 @@ export const selectRandomNumber = (min, max) => {
   return Math.floor(min + Math.random() * (max + 1 - min));
 };
 
+export const getDiffTimeInMillisec = (dateFrom, dateTo) => {
+  return Math.ceil(Math.abs(dateTo.getTime() - dateFrom.getTime()));
+};
+
 export const formatTime = (date) => {
   const hours = standardizeFigures(date.getHours());
   const minutes = standardizeFigures(date.getMinutes());
@@ -39,7 +43,7 @@ export const formatDate = (date) => {
 };
 
 export const formatTimeInterval = (dateFrom, dateTo) => {
-  const diffTimeInMillisec = Math.ceil(Math.abs(dateTo.getTime() - dateFrom.getTime()));
+  const diffTimeInMillisec = getDiffTimeInMillisec(dateFrom, dateTo);
   const diffTime = converseMillisec(diffTimeInMillisec);
 
   const formatedTimeInterval = `

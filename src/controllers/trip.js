@@ -1,14 +1,52 @@
 import NoPointsComponent from '../components/no-points.js';
 import PointComponent from '../components/point.js';
 import PointDayComponent from '../components/point-day.js';
+import PointDayInfoComponent from '../components/point-day-info.js';
 import PointEditComponent from '../components/point-edit.js';
 import PointListComponent from '../components/point-list.js';
-import SortComponent from '../components/sort.js';
+import SortComponent, {SortType} from '../components/sort.js';
 
-import {groupPointsByDate} from '../calculations/common.js';
+import {sortPointsByDate} from '../calculations/points.js';
+import {getDiffTimeInMillisec} from "../utils/common.js";
 import {render, replace, RenderPosition} from "../utils/render.js";
 
 let tripDestinations;
+
+const sortPoints = (points, sortType) => {
+  const pointsForSort = points.slice();
+  let sortedPoints = [];
+
+  switch (sortType) {
+    case SortType.EVENT:
+      sortedPoints = sortPointsByDate(pointsForSort);
+      break;
+
+    case SortType.TIME:
+      sortedPoints = pointsForSort.sort((a, b) => getDiffTimeInMillisec(b[`date-from`], b[`date-to`]) - getDiffTimeInMillisec(a[`date-from`], a[`date-to`]));
+      break;
+
+    case SortType.PRICE:
+      sortedPoints = pointsForSort.sort((a, b) => b[`base-price`] - a[`base-price`]);
+      break;
+  }
+  return sortedPoints;
+};
+
+const renderPointsBySortType = (list, sortedPoints, sortType) => {
+  if (sortType === SortType.EVENT) {
+    sortedPoints.forEach((pointDay, index) => {
+      renderPointDay(list, pointDay, index);
+    });
+  } else {
+    const container = new PointDayComponent();
+    render(list, container, RenderPosition.BEFOREEND);
+
+    sortedPoints.forEach((point) => {
+      renderPoint(container.getPointDayListBlock(), point);
+    });
+  }
+};
+
 
 const renderPoint = (container, ...params) => {
   const [point, index] = params;
@@ -45,8 +83,10 @@ const renderPointDay = (container, ...params) => {
   const [pointDay, index] = params;
   const {date, [`events`]: pointDayList} = pointDay;
 
-  const pointDayElement = new PointDayComponent(date, index);
-  const pointDayListBlock = pointDayElement.getElement().querySelector(`.trip-events__list`);
+  const pointDayElement = new PointDayComponent();
+  render(pointDayElement.getPointDayInfoBlock(), new PointDayInfoComponent(date, index), RenderPosition.BEFOREEND);
+
+  const pointDayListBlock = pointDayElement.getPointDayListBlock();
 
   pointDayList.forEach((point) => {
     renderPoint(pointDayListBlock, point);
@@ -74,10 +114,19 @@ export default class TripController {
 
     render(this._container, this._sortComponent, RenderPosition.BEFOREEND);
     render(this._container, this._PointListComponent, RenderPosition.BEFOREEND);
-
     const pointList = this._container.querySelector(`.trip-days`);
-    groupPointsByDate(points).forEach((pointDay, index) => {
-      renderPointDay(pointList, pointDay, index);
+
+    this._sortComponent.setSortTypeChangeHandler((sortType) => {
+      const sortedPoints = sortPoints(points, sortType);
+      pointList.innerHTML = ``;
+
+      renderPointsBySortType(pointList, sortedPoints, sortType);
     });
+
+    renderPointsBySortType(
+        pointList,
+        sortPoints(points, this._sortComponent.getSortType()),
+        this._sortComponent.getSortType()
+    );
   }
 }

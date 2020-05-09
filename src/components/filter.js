@@ -1,6 +1,6 @@
 import AbstractComponent from "./abstract-component.js";
-import {FILTER_TITLES} from "../const.js";
 
+const FILTER_TITLES = [`everything`, `future`, `past`];
 
 const createFilterItemTemplate = (filters) => {
   return filters.map((filter, i) => {
