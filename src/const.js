@@ -8,3 +8,5 @@ export const EventType = {
   ACTIVITY: new Set([`check-in`, `sightseeing`, `restaurant`])
 };
 
+export const DESTINATIONS = [`Madrid`, `Moscow`, `Helsinki`, `Paris`, `Amsterdam`];
+
