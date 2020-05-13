@@ -22,19 +22,14 @@ const createPointTemplate = (point) => {
     [`date-from`]: dateFrom,
     [`date-to`]: dateTo,
     destination,
-    [`offers`]: offers
+    offers
   } = point;
 
   const {[`name`]: name} = destination;
 
-  const offersList = offers[`offers`];
-  const isOffersSetExisted = offersList.length > 0;
+  const isOffersSetExisted = offers.length > 0;
 
-  const pointTitle = `
-    ${type}
-    ${EventType.TRANSFER.has(type) ? `to ` : `in `}
-    ${name}
-    `;
+  const pointTitle = `${type} ${EventType.TRANSFER.has(type) ? `to ` : `in `} ${name}`;
 
 
   return `<li class="trip-events__item">
@@ -61,7 +56,7 @@ const createPointTemplate = (point) => {
 
         ${isOffersSetExisted ? `<h4 class="visually-hidden">Offers:</h4>
             <ul class="event__selected-offers">
-              ${offersList.slice(0, MAX_OFFERS_TO_SHOW).map((offer) => createOfferTemplate(offer)).join(`\n`)}
+              ${offers.slice(0, MAX_OFFERS_TO_SHOW).map((offer) => createOfferTemplate(offer)).join(`\n`)}
             </ul>` : ``}
 
         <button class="event__rollup-btn" type="button">

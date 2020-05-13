@@ -1,4 +1,4 @@
-import AbstractComponent from "./abstract-component.js";
+import AbstractSmartComponent from "./abstract-smart-component.js";
 import {EventType} from "../const.js";
 import {formatDate} from "../utils/common.js";
 
@@ -54,25 +54,22 @@ const createEventTypeListTemplate = (checkedType, id) => {
     </fieldset>`;
 };
 
-const createPointEditTemplate = (point, allDestinations) => {
+const createPointEditTemplate = (point, allDestinationsNames, params = {}, options = {}) => {
+
   const {
-    type,
     [`base-price`]: price,
     [`date-from`]: dateFrom,
     [`date-to`]: dateTo,
-    destination,
     id,
     [`is-favorite`]: isFavorite,
-    offers
   } = point;
 
+  const {type, destination, offers} = params;
+  const {isDescription, isPicturesSetExisted, isOffersSetExisted} = options;
   const {description, name, pictures} = destination;
 
-  const offersList = offers[`offers`];
-  const isOffersSetExisted = offersList.length > 0;
+  const pointTitle = `${type} ${EventType.TRANSFER.has(type) ? `to ` : `in `}`;
 
-  const isDescription = !!description;
-  const isPicturesSetExisted = pictures.length > 0;
 
   return `<form class="trip-events__item  event  event--edit" action="#" method="post">
       <header class="event__header">
@@ -89,12 +86,11 @@ const createPointEditTemplate = (point, allDestinations) => {
         </div>
 
         <div class="event__field-group  event__field-group--destination">
-          <label class="event__label  event__type-output" for="event-destination-${id}">
-            ${type} to
-          </label>
+          <label class="event__label  event__type-output" for="event-destination-${id}">${pointTitle}</label>
+
           <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${name}" list="destination-list-${id}">
           <datalist id="destination-list-${id}">
-            ${createDataListOfDestinationsTemplate(allDestinations)}
+            ${createDataListOfDestinationsTemplate(allDestinationsNames)}
           </datalist>
         </div>
 
@@ -136,51 +132,132 @@ const createPointEditTemplate = (point, allDestinations) => {
         </button>
       </header>
 
-      <section class="event__details">
-        ${isOffersSetExisted ? `
-        <section class="event__section  event__section--offers">
-          <h3 class="event__section-title  event__section-title--offers">Offers</h3>
+      ${isDescription || isPicturesSetExisted || isOffersSetExisted ? `
+        <section class="event__details">
+          ${isOffersSetExisted ? `
+          <section class="event__section  event__section--offers">
+            <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
-          <div class="event__available-offers">
-            ${createOffersTemplate(offersList)}
-          </div>
-        </section>
-        ` : ``}
-
-        ${isDescription || isPicturesSetExisted ? `
-          <section class="event__section  event__section--destination">
-            <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-            ${isDescription ? `<p class="event__destination-description">${description}</p>` : ``}
-
-            ${isPicturesSetExisted ? `
-              <div class="event__photos-container">
-                <div class="event__photos-tape">
-                  ${createPhotosTemplate(pictures)}
-                </div>
-              </div>
-            ` : ``}
+            <div class="event__available-offers">
+              ${createOffersTemplate(offers)}
+            </div>
           </section>
-        ` : ``}
-      </section>
+          ` : ``}
+
+          ${isDescription || isPicturesSetExisted ? `
+            <section class="event__section  event__section--destination">
+              <h3 class="event__section-title  event__section-title--destination">Destination</h3>
+              ${isDescription ? `<p class="event__destination-description">${description}</p>` : ``}
+
+              ${isPicturesSetExisted ? `
+                <div class="event__photos-container">
+                  <div class="event__photos-tape">
+                    ${createPhotosTemplate(pictures)}
+                  </div>
+                </div>
+              ` : ``}
+            </section>
+          ` : ``}
+        </section>
+      ` : ``}
     </form>`;
 };
 
-export default class PointEdit extends AbstractComponent {
-  constructor(point, destinations) {
+export default class PointEdit extends AbstractSmartComponent {
+  constructor(point, allDestinations, allOffers) {
     super();
     this._point = point;
-    this._destinations = destinations;
+
+    // Все возможные пункты назначения с описанием и фото
+    this._allDestinations = allDestinations;
+    // Названия пунктов назначения
+    this._allDestinationNames = (this._allDestinations).map((dest) => dest.name);
+    this._allOffers = allOffers;
+
+
+    this._type = point.type;
+    this._offers = point.offers;
+    this._destination = point.destination;
+
+
+    this._formSubmitHandler = null;
+    this._closeButtonClickHandler = null;
+    this._favoritesButtonClickHandler = null;
+
+    this._subscribeOnEvents();
   }
 
   getTemplate() {
-    return createPointEditTemplate(this._point, this._destinations);
+    return createPointEditTemplate(this._point, this._allDestinationNames,
+        // Params
+        {
+          type: this._type,
+          offers: this._offers,
+          destination: this._destination
+        },
+        // Options
+        {
+          isDescription: !!this._destination.description,
+          isPicturesSetExisted: this._destination.pictures.length > 0,
+          isOffersSetExisted: this._offers.length > 0
+        }
+    );
+  }
+
+  rerender() {
+    super.rerender();
+  }
+
+  reset() {
+    const point = this._point;
+
+    this._type = point.type;
+    this._offers = point.offers;
+    this._destination = point.destination;
+    this.rerender();
+  }
+
+  recoveryListeners() {
+    this.setFormSubmitHandler(this._formSubmitHandler);
+    this.setCloseButtonClickHandler(this._closeButtonClickHandler);
+    this.setFavoritesButtonClickHandler(this._favoritesButtonClickHandler);
+
+    this._subscribeOnEvents();
   }
 
   setFormSubmitHandler(cb) {
     this.getElement().addEventListener(`submit`, cb);
+    this._formSubmitHandler = cb;
   }
 
   setCloseButtonClickHandler(cb) {
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, cb);
+    this._closeButtonClickHandler = cb;
+  }
+
+  setFavoritesButtonClickHandler(cb) {
+    this.getElement().querySelector(`.event__favorite-btn`).addEventListener(`click`, cb);
+    this._favoritesButtonClickHandler = cb;
+  }
+
+  _subscribeOnEvents() {
+    const element = this.getElement();
+
+    element.querySelector(`.event__type-list`).addEventListener(`change`, (evt) => {
+      this._type = evt.target.value;
+      this._offers = [].concat(...this._allOffers.filter((el) => el.type === this._type).map((el) => el.offers));
+
+      this.rerender();
+    });
+
+    element.querySelector(`[name='event-destination']`).addEventListener(`change`, (evt) => {
+      const name = evt.target.value;
+      const currentDestination = this._allDestinations.filter((el) => el.name === name);
+
+      if (currentDestination.length > 0) {
+        this._destination = currentDestination[0];
+        this.rerender();
+      }
+    });
   }
 }
