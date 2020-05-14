@@ -9,7 +9,7 @@ const MAX_HOUR = 23;
 const MIN_MINUTES = 0;
 const MAX_MINUTES = 59;
 
-const MONTH = 4;
+const MONTH = 5;
 const YEAR = 2020;
 
 const generatePointDateFrom = () => {
