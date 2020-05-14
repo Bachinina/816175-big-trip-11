@@ -769,6 +769,8 @@ main {
   .event__input--time {
     width: 130px;
     text-align: center; }
+  .event__input--time::placeholder {
+    font-size: 15px; }
   .event__input--price {
     width: 66px; }
 

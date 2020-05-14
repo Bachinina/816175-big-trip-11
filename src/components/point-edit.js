@@ -1,6 +1,9 @@
 import AbstractSmartComponent from "./abstract-smart-component.js";
 import {EventType} from "../const.js";
-import {formatDate} from "../utils/common.js";
+
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
+
 
 const createOffersTemplate = (offers) => {
   return offers.map((offer, index) => {
@@ -58,8 +61,6 @@ const createPointEditTemplate = (point, allDestinationsNames, params = {}, optio
 
   const {
     [`base-price`]: price,
-    [`date-from`]: dateFrom,
-    [`date-to`]: dateTo,
     id,
     [`is-favorite`]: isFavorite,
   } = point;
@@ -99,12 +100,12 @@ const createPointEditTemplate = (point, allDestinationsNames, params = {}, optio
           <label class="visually-hidden" for="event-start-time-${id}">
             From
           </label>
-          <input class="event__input  event__input--time" id="event-start-time-${id}" type="text" name="event-start-time" value="${formatDate(dateFrom)}">
+          <input class="event__input  event__input--time" id="event-start-time-${id}" type="text" name="event-start-time" placeholder="Click to choose">
           —
           <label class="visually-hidden" for="event-end-time-${id}">
             To
           </label>
-          <input class="event__input  event__input--time" id="event-end-time-${id}" type="text" name="event-end-time" value="${formatDate(dateTo)}">
+          <input class="event__input  event__input--time" id="event-end-time-${id}" type="text" name="event-end-time" placeholder="Click to choose">
         </div>
 
         <div class="event__field-group  event__field-group--price">
@@ -178,13 +179,26 @@ export default class PointEdit extends AbstractSmartComponent {
     this._type = point.type;
     this._offers = point.offers;
     this._destination = point.destination;
+    this._dateFrom = point[`date-from`];
+    this._dateTo = point[`date-to`];
 
 
     this._formSubmitHandler = null;
     this._closeButtonClickHandler = null;
     this._favoritesButtonClickHandler = null;
-
     this._subscribeOnEvents();
+
+    // Дата и время
+    this._flatpickrFrom = null;
+    this._flatpickrTo = null;
+    this._flatpickrOptions = {
+      altInput: true,
+      altFormat: `d/m/y H:i`,
+      allowInput: true,
+      enableTime: true,
+      time_24hr: true // eslint-disable-line
+    };
+    this._applyFlatpickr();
   }
 
   getTemplate() {
@@ -193,7 +207,7 @@ export default class PointEdit extends AbstractSmartComponent {
         {
           type: this._type,
           offers: this._offers,
-          destination: this._destination
+          destination: this._destination,
         },
         // Options
         {
@@ -206,6 +220,7 @@ export default class PointEdit extends AbstractSmartComponent {
 
   rerender() {
     super.rerender();
+    this._applyFlatpickr();
   }
 
   reset() {
@@ -260,4 +275,42 @@ export default class PointEdit extends AbstractSmartComponent {
       }
     });
   }
+
+  _applyFlatpickr() {
+    if (this._flatpickrFrom || this._flatpickrTo) {
+      this._flatpickrFrom.destroy();
+      this._flatpickrTo.destroy();
+      this._flatpickrFrom = null;
+      this._flatpickrTo = null;
+    }
+
+    const dateFrom = this.getElement().querySelector(`[name='event-start-time']`);
+    const dateTo = this.getElement().querySelector(`[name='event-end-time']`);
+
+    const to = flatpickr(dateTo,
+        Object.assign({}, this._flatpickrOptions, {minDate: this._dateFrom})
+    );
+    to.setDate(this._dateTo);
+
+    const from = flatpickr(dateFrom,
+        Object.assign({},
+            this._flatpickrOptions,
+            {defaultDate: this._dateFrom || `today`},
+            {onChange(selectedDates) {
+              to.set(`minDate`, selectedDates[0]);
+
+              if (to.selectedDates[0] === undefined) {
+                const toDate = new Date(selectedDates[0].getTime());
+                toDate.setHours(selectedDates[0].getHours() + 1);
+
+                to.setDate(toDate);
+              }
+            }}
+        )
+    );
+
+    this._flatpickrFrom = from;
+    this._flatpickrTo = to;
+  }
 }
+
