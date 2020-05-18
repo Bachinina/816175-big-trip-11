@@ -8,5 +8,11 @@ export const EventType = {
   ACTIVITY: new Set([`check-in`, `sightseeing`, `restaurant`])
 };
 
+export const FilterType = {
+  EVERY: `everything`,
+  FUTURE: `future`,
+  PAST: `past`,
+};
+
 export const DESTINATIONS = [`Madrid`, `Moscow`, `Helsinki`, `Paris`, `Amsterdam`];
 

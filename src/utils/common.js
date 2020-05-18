@@ -4,6 +4,12 @@ const standardizeFigures = (figure) => {
   return figure >= 10 ? figure : `0${figure}`;
 };
 
+export const getDiffTime = (dateFrom, dateTo) => {
+  const from = moment(dateFrom);
+  const to = moment(dateTo);
+  return moment.duration(to.diff(from));
+};
+
 export const selectRandomArrElement = (arr) => {
   return arr[Math.floor(Math.random() * arr.length)];
 };
@@ -17,9 +23,7 @@ export const formatTime = (date) => {
 };
 
 export const formatTimeInterval = (dateFrom, dateTo) => {
-  const from = moment(dateFrom);
-  const to = moment(dateTo);
-  const diffTime = moment.duration(to.diff(from));
+  const diffTime = getDiffTime(dateFrom, dateTo);
 
   const days = diffTime.days();
   const hours = diffTime.hours();
