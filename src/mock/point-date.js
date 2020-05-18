@@ -1,7 +1,7 @@
 import {selectRandomNumber} from "../utils/common.js";
 
-const MIN_DATE = 7;
-const MAX_DATE = 15;
+const MIN_DATE = 14;
+const MAX_DATE = 19;
 
 const MIN_HOUR = 0;
 const MAX_HOUR = 23;
@@ -16,7 +16,7 @@ const generatePointDateFrom = () => {
   const dateFrom = new Date();
 
   dateFrom.setYear(YEAR);
-  dateFrom.setMonth(MONTH);
+  dateFrom.setMonth(MONTH - 1);
   dateFrom.setDate(selectRandomNumber(MIN_DATE, MAX_DATE));
 
   dateFrom.setHours(selectRandomNumber(MIN_HOUR, MAX_HOUR));

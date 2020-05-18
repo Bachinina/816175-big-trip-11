@@ -1,16 +1,48 @@
 import AbstractSmartComponent from "./abstract-smart-component.js";
+import {Mode as PointControllerMode} from '../controllers/point.js';
 import {EventType} from "../const.js";
 
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
 
-const createOffersTemplate = (offers) => {
-  return offers.map((offer, index) => {
+const parseFormData = (formData, allDestinations, allOffers, type) => {
+
+  const parseDestination = (name) => {
+    return allDestinations.filter((destination) => destination.name === name)[0];
+  };
+
+  const parseOffers = (titlesOfSelectedOffers) => {
+    const offersOfCurrentType = [].concat(...allOffers.filter((offer) => offer.type === type).map((offer) => offer.offers));
+    const selectedOffers = [];
+    offersOfCurrentType.forEach((offer) => {
+      if (titlesOfSelectedOffers.indexOf(offer.title) !== -1) {
+        selectedOffers.push(offer);
+      }
+    });
+    return selectedOffers;
+  };
+
+  return {
+    type: formData.get(`event-type`),
+    [`base-price`]: parseInt(formData.get(`event-price`), 10),
+    [`date-from`]: new Date(formData.get(`event-start-time`)),
+    [`date-to`]: new Date(formData.get(`event-end-time`)),
+    [`destination`]: parseDestination(formData.get(`event-destination`)),
+    id: formData.get(`id`),
+    [`is-favorite`]: !!formData.get(`event-favorite`),
+    [`offers`]: parseOffers(formData.getAll(`event-offer`)),
+  };
+};
+
+
+const createOffersTemplate = (selectedOffers, allOffers) => {
+  return allOffers.map((offer, index) => {
     const {title, price} = offer;
     return `<div class="event__offer-selector">
-        <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-${index + 1}" type="checkbox" name="event-offer-luggage" checked>
-        <label class="event__offer-label" for="event-offer-luggage-${index + 1}">
+        <input class="event__offer-checkbox  visually-hidden" id="event-offer-${index + 1}" type="checkbox" name="event-offer" value="${title}"
+        ${selectedOffers.indexOf(offer) !== -1 ? `checked` : ``}>
+        <label class="event__offer-label" for="event-offer-${index + 1}">
           <span class="event__offer-title">${title}</span>
           &plus;
           &euro;&nbsp;<span class="event__offer-price">${price}</span>
@@ -57,7 +89,7 @@ const createEventTypeListTemplate = (checkedType, id) => {
     </fieldset>`;
 };
 
-const createPointEditTemplate = (point, allDestinationsNames, params = {}, options = {}) => {
+const createPointEditTemplate = (mode, point, allDestinationsNames, allOffers, params = {}, options = {}) => {
 
   const {
     [`base-price`]: price,
@@ -66,14 +98,16 @@ const createPointEditTemplate = (point, allDestinationsNames, params = {}, optio
   } = point;
 
   const {type, destination, offers} = params;
-  const {isDescription, isPicturesSetExisted, isOffersSetExisted} = options;
+  const {isDescription, isPicturesSetExisted, isOffersSetExisted, isFirstPoint = false} = options;
   const {description, name, pictures} = destination;
+  const offersOfCurrentType = [].concat(...allOffers.filter((offer) => offer.type === type).map((offer) => offer.offers));
 
   const pointTitle = `${type} ${EventType.TRANSFER.has(type) ? `to ` : `in `}`;
 
-
-  return `<form class="trip-events__item  event  event--edit" action="#" method="post">
+  return `<li class="trip-events__item">
+  <form class="trip-events__item  event  event--edit" action="#" method="post">
       <header class="event__header">
+        <input type="hidden" name="id" value="${id}">
         <div class="event__type-wrapper">
           <label class="event__type  event__type-btn" for="event-type-toggle-${id}">
             <span class="visually-hidden">Choose event type</span>
@@ -89,7 +123,7 @@ const createPointEditTemplate = (point, allDestinationsNames, params = {}, optio
         <div class="event__field-group  event__field-group--destination">
           <label class="event__label  event__type-output" for="event-destination-${id}">${pointTitle}</label>
 
-          <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${name}" list="destination-list-${id}">
+          <input class="event__input  event__input--destination" id="event-destination-${id}" type="" name="event-destination" value="${name}" list="destination-list-${id}" required autocomplete="off">
           <datalist id="destination-list-${id}">
             ${createDataListOfDestinationsTemplate(allDestinationsNames)}
           </datalist>
@@ -113,67 +147,79 @@ const createPointEditTemplate = (point, allDestinationsNames, params = {}, optio
             <span class="visually-hidden">Price</span>
             €
           </label>
-          <input class="event__input  event__input--price" id="event-price-${id}" type="text" name="event-price" value="${price}">
+          <input class="event__input  event__input--price" id="event-price-${id}" type="number" name="event-price" value="${price}" required  autocomplete="off" step="1" min="0">
         </div>
 
         <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-        <button class="event__reset-btn" type="reset">Delete</button>
+        <button class="event__reset-btn" type="reset">${mode === PointControllerMode.ADDING ? `Cancel` : `Delete`}</button>
 
-        <input id="event-favorite-${id}" class="event__favorite-checkbox  visually-hidden" type="checkbox" name="event-favorite"
-          ${isFavorite ? `checked` : ``}>
-        <label class="event__favorite-btn" for="event-favorite-${id}">
-          <span class="visually-hidden">Add to favorite</span>
-          <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
-            <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"></path>
-          </svg>
-        </label>
+        ${mode === PointControllerMode.ADDING ? `` : `
+          <input id="event-favorite-${id}" class="event__favorite-checkbox  visually-hidden" type="checkbox" name="event-favorite"
+            ${isFavorite ? `checked` : ``}>
+          <label class="event__favorite-btn" for="event-favorite-${id}">
+            <span class="visually-hidden">Add to favorite</span>
+            <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
+              <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"></path>
+            </svg>
+          </label>
+        `}
 
-        <button class="event__rollup-btn" type="button">
-          <span class="visually-hidden">Open event</span>
-        </button>
+        ${mode === PointControllerMode.ADDING ? `` : `
+          <button class="event__rollup-btn" type="button">
+            <span class="visually-hidden">Open event</span>
+          </button>
+        `}
       </header>
 
-      ${isDescription || isPicturesSetExisted || isOffersSetExisted ? `
-        <section class="event__details">
-          ${isOffersSetExisted ? `
-          <section class="event__section  event__section--offers">
-            <h3 class="event__section-title  event__section-title--offers">Offers</h3>
+      ${isFirstPoint ? `` : `
+        ${isDescription || isPicturesSetExisted || isOffersSetExisted ? `
+          <section class="event__details">
+            ${isOffersSetExisted ? `
+            <section class="event__section  event__section--offers">
+              <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
-            <div class="event__available-offers">
-              ${createOffersTemplate(offers)}
-            </div>
-          </section>
-          ` : ``}
-
-          ${isDescription || isPicturesSetExisted ? `
-            <section class="event__section  event__section--destination">
-              <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-              ${isDescription ? `<p class="event__destination-description">${description}</p>` : ``}
-
-              ${isPicturesSetExisted ? `
-                <div class="event__photos-container">
-                  <div class="event__photos-tape">
-                    ${createPhotosTemplate(pictures)}
-                  </div>
-                </div>
-              ` : ``}
+              <div class="event__available-offers">
+                ${createOffersTemplate(offers, offersOfCurrentType)}
+              </div>
             </section>
-          ` : ``}
-        </section>
-      ` : ``}
-    </form>`;
+            ` : ``}
+
+            ${isDescription || isPicturesSetExisted ? `
+              <section class="event__section  event__section--destination">
+                <h3 class="event__section-title  event__section-title--destination">Destination</h3>
+                ${isDescription ? `<p class="event__destination-description">${description}</p>` : ``}
+
+                ${isPicturesSetExisted ? `
+                  <div class="event__photos-container">
+                    <div class="event__photos-tape">
+                      ${createPhotosTemplate(pictures)}
+                    </div>
+                  </div>
+                ` : ``}
+              </section>
+            ` : ``}
+          </section>
+        ` : ``}
+      `}
+    </form>
+  </li>`;
 };
 
 export default class PointEdit extends AbstractSmartComponent {
-  constructor(point, allDestinations, allOffers) {
+  constructor(point, pointsModel, mode) {
     super();
+    this._originalPoint = Object.assign({}, point);
     this._point = point;
+    this._pointsModel = pointsModel;
+    this._mode = mode;
 
     // Все возможные пункты назначения с описанием и фото
-    this._allDestinations = allDestinations;
+    this._allDestinations = this._pointsModel.getAllDestinations();
     // Названия пунктов назначения
     this._allDestinationNames = (this._allDestinations).map((dest) => dest.name);
-    this._allOffers = allOffers;
+
+    // Все возможные предложения по типу точки маршрута
+    this._allOffers = this._pointsModel.getAllOffers();
 
 
     this._type = point.type;
@@ -186,6 +232,7 @@ export default class PointEdit extends AbstractSmartComponent {
     this._formSubmitHandler = null;
     this._closeButtonClickHandler = null;
     this._favoritesButtonClickHandler = null;
+    this._deleteButtonClickHandler = null;
     this._subscribeOnEvents();
 
     // Дата и время
@@ -201,8 +248,14 @@ export default class PointEdit extends AbstractSmartComponent {
     this._applyFlatpickr();
   }
 
+  getData() {
+    const form = this.getElement().querySelector(`form`);
+    const formData = new FormData(form);
+    return parseFormData(formData, this._allDestinations, this._allOffers, this._type);
+  }
+
   getTemplate() {
-    return createPointEditTemplate(this._point, this._allDestinationNames,
+    return createPointEditTemplate(this._mode, this._point, this._allDestinationNames, this._allOffers,
         // Params
         {
           type: this._type,
@@ -213,7 +266,8 @@ export default class PointEdit extends AbstractSmartComponent {
         {
           isDescription: !!this._destination.description,
           isPicturesSetExisted: this._destination.pictures.length > 0,
-          isOffersSetExisted: this._offers.length > 0
+          isOffersSetExisted: [].concat(...this._allOffers.filter((offer) => offer.type === this._type).map((offer) => offer.offers)).length > 0,
+          isFirstPoint: this._mode === PointControllerMode.ADDING && this._pointsModel.getPoints().length === 0
         }
     );
   }
@@ -224,43 +278,58 @@ export default class PointEdit extends AbstractSmartComponent {
   }
 
   reset() {
-    const point = this._point;
-
+    const point = this._originalPoint;
     this._type = point.type;
     this._offers = point.offers;
     this._destination = point.destination;
+
     this.rerender();
+  }
+
+  removeElement() {
+    this._delFlatpickr();
+    super.removeElement();
   }
 
   recoveryListeners() {
     this.setFormSubmitHandler(this._formSubmitHandler);
     this.setCloseButtonClickHandler(this._closeButtonClickHandler);
-    this.setFavoritesButtonClickHandler(this._favoritesButtonClickHandler);
-
+    this.setFavoriteButtonClickHandler(this._favoritesButtonClickHandler);
+    this.setDeleteButtonClickHandler(this._deleteButtonClickHandler);
     this._subscribeOnEvents();
   }
 
   setFormSubmitHandler(cb) {
-    this.getElement().addEventListener(`submit`, cb);
+    this.getElement().querySelector(`form`).addEventListener(`submit`, cb);
     this._formSubmitHandler = cb;
   }
 
   setCloseButtonClickHandler(cb) {
-    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, cb);
-    this._closeButtonClickHandler = cb;
+    if (this._mode === PointControllerMode.DEFAULT) {
+      this.getElement().querySelector(`form`).querySelector(`.event__rollup-btn`).addEventListener(`click`, cb);
+      this._closeButtonClickHandler = cb;
+    }
   }
 
-  setFavoritesButtonClickHandler(cb) {
-    this.getElement().querySelector(`.event__favorite-btn`).addEventListener(`click`, cb);
-    this._favoritesButtonClickHandler = cb;
+  setFavoriteButtonClickHandler(cb) {
+    if (this._mode === PointControllerMode.DEFAULT) {
+      this.getElement().querySelector(`form`).querySelector(`.event__favorite-btn`).addEventListener(`click`, cb);
+      this._favoritesButtonClickHandler = cb;
+    }
   }
+
+  setDeleteButtonClickHandler(cb) {
+    this.getElement().querySelector(`form`).querySelector(`.event__reset-btn`).addEventListener(`click`, cb);
+    this._deleteButtonClickHandler = cb;
+  }
+
 
   _subscribeOnEvents() {
-    const element = this.getElement();
+    const element = this.getElement().querySelector(`form`);
 
     element.querySelector(`.event__type-list`).addEventListener(`change`, (evt) => {
       this._type = evt.target.value;
-      this._offers = [].concat(...this._allOffers.filter((el) => el.type === this._type).map((el) => el.offers));
+      this._offers = [];
 
       this.rerender();
     });
@@ -274,18 +343,28 @@ export default class PointEdit extends AbstractSmartComponent {
         this.rerender();
       }
     });
+
+    const destinationInput = element.querySelector(`[name="event-destination"]`);
+    const checkName = (value) => {
+      return this._allDestinationNames.indexOf(value) > 0;
+    };
+    destinationInput.addEventListener(`input`, () => {
+      const value = destinationInput.value;
+      if (!checkName(value)) {
+        destinationInput.setCustomValidity(`Please select a value from the list`);
+      } else if (destinationInput.validity.valueMissing) {
+        destinationInput.setCustomValidity(`Please select a value from the list`);
+      } else {
+        destinationInput.setCustomValidity(``);
+      }
+    });
   }
 
   _applyFlatpickr() {
-    if (this._flatpickrFrom || this._flatpickrTo) {
-      this._flatpickrFrom.destroy();
-      this._flatpickrTo.destroy();
-      this._flatpickrFrom = null;
-      this._flatpickrTo = null;
-    }
+    this._delFlatpickr();
 
-    const dateFrom = this.getElement().querySelector(`[name='event-start-time']`);
-    const dateTo = this.getElement().querySelector(`[name='event-end-time']`);
+    const dateFrom = this.getElement().querySelector(`form`).querySelector(`[name='event-start-time']`);
+    const dateTo = this.getElement().querySelector(`form`).querySelector(`[name='event-end-time']`);
 
     const to = flatpickr(dateTo,
         Object.assign({}, this._flatpickrOptions, {minDate: this._dateFrom})
@@ -311,6 +390,15 @@ export default class PointEdit extends AbstractSmartComponent {
 
     this._flatpickrFrom = from;
     this._flatpickrTo = to;
+  }
+
+  _delFlatpickr() {
+    if (this._flatpickrFrom && this._flatpickrTo) {
+      this._flatpickrFrom.destroy();
+      this._flatpickrTo.destroy();
+      this._flatpickrFrom = null;
+      this._flatpickrTo = null;
+    }
   }
 }
 

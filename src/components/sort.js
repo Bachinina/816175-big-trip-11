@@ -1,4 +1,4 @@
-import AbstractComponent from "./abstract-component.js";
+import AbstractSmartComponent from "./abstract-smart-component.js";
 
 export const SortType = {
   EVENT: `event`,
@@ -26,10 +26,12 @@ const createSortTemplate = (currentType) => {
     </form>`;
 };
 
-export default class Sort extends AbstractComponent {
+export default class Sort extends AbstractSmartComponent {
   constructor() {
     super();
     this._currenSortType = SortType.EVENT;
+
+    this._sortTypeChangeHandler = null;
   }
 
   getTemplate() {
@@ -43,17 +45,32 @@ export default class Sort extends AbstractComponent {
   setSortTypeChangeHandler(cb) {
     this.getElement().addEventListener(`click`, (evt) => {
       if (evt.target.getAttribute(`name`) === `trip-sort`) {
-
         const sortType = evt.target.getAttribute(`value`);
-
         if (this._currenSortType === sortType) {
           return;
         }
-
         this._currenSortType = sortType;
-
         cb(this._currenSortType);
       }
     });
+    this._sortTypeChangeHandler = cb;
+  }
+
+  rerender() {
+    super.rerender();
+  }
+
+  reset() {
+    if (this._currenSortType === SortType.EVENT) {
+      return false;
+    } else {
+      this._currenSortType = SortType.EVENT;
+      this.rerender();
+      return true;
+    }
+  }
+
+  recoveryListeners() {
+    this.setSortTypeChangeHandler(this._sortTypeChangeHandler);
   }
 }

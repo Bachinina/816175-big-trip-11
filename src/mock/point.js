@@ -8,8 +8,18 @@ const MAX_PRICE = 1000;
 let offers = [];
 let destinations = [];
 
+const selectRandomOffers = (offersList) => {
+  const selectedOffers = [];
+  offersList.forEach((offer) => {
+    if (Math.random() > 0.5) {
+      selectedOffers.push(offer);
+    }
+  });
 
-const generatePoint = (id) => {
+  return selectedOffers;
+};
+
+const generatePoint = () => {
   const type = selectRandomArrElement(EventType.ALL);
   const pointDate = generateDate();
   return {
@@ -18,9 +28,9 @@ const generatePoint = (id) => {
     [`date-from`]: pointDate[`date-from`],
     [`date-to`]: pointDate[`date-to`],
     [`destination`]: selectRandomArrElement(destinations),
-    id,
+    id: String(new Date() + Math.random()),
     [`is-favorite`]: false,
-    [`offers`]: [].concat(...offers.filter((offer) => offer.type === type).map((offer) => offer.offers))
+    [`offers`]: selectRandomOffers([].concat(...offers.filter((offer) => offer.type === type).map((offer) => offer.offers)))
   };
 };
 
@@ -31,7 +41,7 @@ export const generatePoints = (count, offersList, destinationsList) => {
   const points = [];
 
   for (let i = 1; i <= count; i++) {
-    points.push(generatePoint(i));
+    points.push(generatePoint());
   }
   return points;
 };
