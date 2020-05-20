@@ -669,6 +669,10 @@ main {
   font-weight: 400;
   font-size: inherit; }
 
+.event__title-type {
+  text-transform: capitalize;
+}
+
 .event__schedule {
   -ms-flex-negative: 0;
       flex-shrink: 0;
@@ -928,7 +932,11 @@ main {
 
 .statistics {
   padding-top: 47px;
-  padding-left: 37px; }
+  padding-left: 37px;
+  display: block; }
+.statistics--hidden {
+  display: none;
+}
 
 .statistics__item:not(:last-child) {
   margin-bottom: 78px; }

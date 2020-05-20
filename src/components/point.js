@@ -29,7 +29,7 @@ const createPointTemplate = (point) => {
 
   const isOffersSetExisted = offers.length > 0;
 
-  const pointTitle = `${type} ${EventType.TRANSFER.has(type) ? `to ` : `in `} ${name}`;
+  const pointTitle = `<span class="event__title-type">${type}</span> ${EventType.TRANSFER.has(type) ? `to ` : `in `} ${name}`;
 
 
   return `<li class="trip-events__item">
