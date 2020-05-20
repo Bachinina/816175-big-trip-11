@@ -4,6 +4,7 @@ import FilterController from './controllers/filter.js';
 import PointAddBtnController from './controllers/point-add-btn.js';
 import TripController from './controllers/trip.js';
 import InfoController from './controllers/info.js';
+import StatsController from './controllers/stats.js';
 
 import {render, RenderPosition} from "./utils/render.js";
 
@@ -34,20 +35,27 @@ pointAddBtnController.render();
 
 // Контент: сортировка, события, редактирование
 const pointsListBlock = document.querySelector(`.trip-events`);
-
 const tripController = new TripController(pointsListBlock, pointsModel);
 tripController.render();
+
+
+// Статистика
+const statsListBlock = document.querySelector(`.statistics`);
+const statistics = new StatsController(statsListBlock, pointsModel);
+statistics.render();
 
 
 menuComponent.setMenuClickHandler((activeMode) => {
   switch (activeMode) {
     case MenuMode.STATS:
       menuComponent.setActiveMode(activeMode);
-      tripController.showStats();
+      tripController.hide();
+      statistics.show();
       break;
     case MenuMode.TABLE:
       menuComponent.setActiveMode(activeMode);
-      tripController.render();
+      tripController.show();
+      statistics.hide();
       break;
   }
 });

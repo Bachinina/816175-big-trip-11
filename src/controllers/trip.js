@@ -118,16 +118,6 @@ export default class TripController {
     }
   }
 
-  showStats() {
-    this._resetFilter();
-    this._resetSort();
-
-    this._update();
-    remove(this._sortComponent);
-    this._clear();
-  }
-
-
   // Служебные функции для рендеринга точек
   // ------------------------------------------------
   _renderPoints(container, points) {
@@ -282,5 +272,14 @@ export default class TripController {
       this._mode = TripControllerMode.DEFAULT;
     }
     this.render();
+  }
+
+  show() {
+    this._container.classList.remove(`trip-events--hidden`);
+  }
+
+  hide() {
+    this._resetSort();
+    this._container.classList.add(`trip-events--hidden`);
   }
 }

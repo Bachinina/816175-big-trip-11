@@ -22,6 +22,7 @@ export const formatTime = (date) => {
   return moment(date).format(`HH:mm`);
 };
 
+
 export const formatTimeInterval = (dateFrom, dateTo) => {
   const diffTime = getDiffTime(dateFrom, dateTo);
 
