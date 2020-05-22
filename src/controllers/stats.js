@@ -54,7 +54,7 @@ export default class StatsController {
       return points
       .filter((point) => point.type === type)
       .reduce((summ, currentPoint) => {
-        return summ + currentPoint[`base-price`];
+        return summ + currentPoint.basePrice;
       }, 0);
     });
     this._moneyStats = selectAllTypes
@@ -87,7 +87,7 @@ export default class StatsController {
       });
 
     const timeValues = points.map((point) => {
-      return Math.ceil(getDiffTime(point[`date-from`], point[`date-to`]).asHours());
+      return Math.ceil(getDiffTime(point.dateFrom, point.dateTo).asHours());
     });
 
     const times = [];
@@ -114,9 +114,9 @@ export default class StatsController {
   canvas() {
     // Рассчитаем высоту канваса в зависимости от того, сколько данных в него будет передаваться
     const BAR_HEIGHT = 55;
-    this._moneyCtx.height = BAR_HEIGHT * 6;
-    this._transportCtx.height = BAR_HEIGHT * 4;
-    this._timeSpentCtx.height = BAR_HEIGHT * 4;
+    this._moneyCtx.height = BAR_HEIGHT * this._moneyStats.length;
+    this._transportCtx.height = BAR_HEIGHT * this._transportStats.length;
+    this._timeSpentCtx.height = BAR_HEIGHT * this._timeStats.length;
 
     this._moneyChart = new Chart(this._moneyCtx, {
       plugins: [ChartDataLabels],
@@ -127,7 +127,9 @@ export default class StatsController {
           data: this._moneyStats.map((el) => el.value),
           backgroundColor: `#ffffff`,
           hoverBackgroundColor: `#ffffff`,
-          anchor: `start`
+          anchor: `start`,
+          maxBarThickness: 44,
+          minBarLength: 50,
         }]
       },
       options: {
@@ -159,8 +161,7 @@ export default class StatsController {
             gridLines: {
               display: false,
               drawBorder: false
-            },
-            barThickness: 44,
+            }
           }],
           xAxes: [{
             ticks: {
@@ -170,8 +171,7 @@ export default class StatsController {
             gridLines: {
               display: false,
               drawBorder: false
-            },
-            minBarLength: 50
+            }
           }],
         },
         legend: {
@@ -192,7 +192,9 @@ export default class StatsController {
           data: this._transportStats.map((el) => el.value),
           backgroundColor: `#ffffff`,
           hoverBackgroundColor: `#ffffff`,
-          anchor: `start`
+          anchor: `start`,
+          maxBarThickness: 44,
+          minBarLength: 50,
         }]
       },
       options: {
@@ -224,8 +226,7 @@ export default class StatsController {
             gridLines: {
               display: false,
               drawBorder: false
-            },
-            barThickness: 44,
+            }
           }],
           xAxes: [{
             ticks: {
@@ -235,8 +236,7 @@ export default class StatsController {
             gridLines: {
               display: false,
               drawBorder: false
-            },
-            minBarLength: 50
+            }
           }],
         },
         legend: {
@@ -257,7 +257,9 @@ export default class StatsController {
           data: this._timeStats.map((el) => el.value),
           backgroundColor: `#ffffff`,
           hoverBackgroundColor: `#ffffff`,
-          anchor: `start`
+          anchor: `start`,
+          maxBarThickness: 44,
+          minBarLength: 50,
         }]
       },
       options: {
@@ -289,8 +291,7 @@ export default class StatsController {
             gridLines: {
               display: false,
               drawBorder: false
-            },
-            barThickness: 44,
+            }
           }],
           xAxes: [{
             ticks: {
@@ -300,8 +301,7 @@ export default class StatsController {
             gridLines: {
               display: false,
               drawBorder: false
-            },
-            minBarLength: 50
+            }
           }],
         },
         legend: {

@@ -1,5 +1,6 @@
 import PointComponent from '../components/point.js';
 import PointEditComponent from '../components/point-edit.js';
+import PointModel from "../models/point.js";
 
 import {render, replace, remove, RenderPosition} from "../utils/render.js";
 
@@ -12,24 +13,59 @@ export const Mode = {
 
 export const EmptyPoint = {
   type: `bus`,
-  [`base-price`]: ``,
-  [`date-from`]: new Date(),
-  [`date-to`]: new Date(),
+  basePrice: ``,
+  dateFrom: new Date(),
+  dateTo: new Date(),
   [`destination`]: {
     "description": ``,
     "name": ``,
     "pictures": []
   },
   id: String(new Date() + Math.random()),
-  [`is-favorite`]: false,
+  isFavorite: false,
   [`offers`]: [],
 };
+
+
+const parseFormData = (formData, allDestinations, allOffers, type) => {
+  const parseDestination = (name) => {
+    return allDestinations.filter((destination) => destination.name === name)[0];
+  };
+
+  const parseOffers = (titlesOfSelectedOffers) => {
+    const offersOfCurrentType = [].concat(...allOffers.filter((offer) => offer.type === type).map((offer) => offer.offers));
+    const selectedOffers = [];
+    offersOfCurrentType.forEach((offer) => {
+      if (titlesOfSelectedOffers.indexOf(offer.title) !== -1) {
+        selectedOffers.push(offer);
+      }
+    });
+    return selectedOffers;
+  };
+
+  return new PointModel({
+    "id": formData.get(`id`),
+    "type": formData.get(`event-type`),
+    "base_price": parseInt(formData.get(`event-price`), 10),
+    "date_from": new Date(formData.get(`event-start-time`)),
+    "date_to": new Date(formData.get(`event-end-time`)),
+    "destination": parseDestination(formData.get(`event-destination`)),
+    "is_favorite": !!formData.get(`event-favorite`),
+    "offers": parseOffers(formData.getAll(`event-offer`))
+  });
+};
+
 
 export default class PointController {
   constructor(container, pointsModel, onDataChange, onViewChange) {
     this._mode = null;
     this._pointsModel = pointsModel;
     this._container = container;
+
+    // Все возможные пункты назначения с описанием и фото
+    this._allDestinations = this._pointsModel.getAllDestinations();
+    // Все возможные предложения по типу точки маршрута
+    this._allOffers = this._pointsModel.getAllOffers();
 
     this._onDataChange = onDataChange;
     this._onViewChange = onViewChange;
@@ -64,7 +100,7 @@ export default class PointController {
 
     this._pointEditComponent.setFormSubmitHandler((evt) => {
       evt.preventDefault();
-      const data = this._pointEditComponent.getData();
+      const data = parseFormData(this._pointEditComponent.getData(), this._allDestinations, this._allOffers, this._point.type);
       this._onDataChange(point, data);
     });
 
@@ -72,9 +108,9 @@ export default class PointController {
       case Mode.DEFAULT:
         this._pointComponent.setEditButtonClickHandler(this._replacePointToEdit);
         this._pointEditComponent.setFavoriteButtonClickHandler(() => {
-          this._onDataChange(this._point, Object.assign({}, this._point, {
-            [`is-favorite`]: !this._point[`is-favorite`],
-          }), true);
+          const newPoint = PointModel.clone(point);
+          newPoint.isFavorite = !newPoint.isFavorite;
+          this._onDataChange(point, newPoint, true);
         });
         this._pointEditComponent.setCloseButtonClickHandler(this._replaceEditToPoint);
         this._pointEditComponent.setDeleteButtonClickHandler(() => {

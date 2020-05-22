@@ -5,7 +5,7 @@ export const calcTotalPrice = (points) => {
   .concat(...points
     .slice()
     .map(
-        (point) => [point[`base-price`],
+        (point) => [point.basePrice,
           ...point[`offers`].map((offer) => offer.price)]
     )
   )
