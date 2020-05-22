@@ -1,6 +1,3 @@
-import {generatePoints} from '../mock/point.js';
-import {generatePointOffers} from '../mock/point-offers.js';
-import {generateDestinations} from '../mock/point-destinations.js';
 import {getTripDates, getTripDestinations} from '../calculations/info.js';
 import {getPointsByFilter} from "../utils/filter.js";
 import {sortPointsByTime} from '../calculations/points.js';
@@ -15,8 +12,8 @@ export default class Points {
     this._tripDestinations = null;
     this._totalPrice = 0;
 
-    this._offers = generatePointOffers();
-    this._destinations = generateDestinations();
+    this._offers = [];
+    this._destinations = [];
     this._activeFilterType = FilterType.EVERY;
 
     this._dataChangeHandlers = [];
@@ -27,12 +24,6 @@ export default class Points {
 
   // Вспомогательные функции
   // ------------------------------------------------
-  generate(count) {
-    this.setPoints(
-        generatePoints(count, this._offers, this._destinations)
-    );
-  }
-
   getPoints() {
     return this._points;
   }
@@ -43,6 +34,14 @@ export default class Points {
 
   getFiltredPoints() {
     return getPointsByFilter(this._points, this._activeFilterType);
+  }
+
+  setDestinations(destinations) {
+    this._destinations = destinations;
+  }
+
+  setOffers(offers) {
+    this._offers = offers;
   }
 
   setPoints(points) {

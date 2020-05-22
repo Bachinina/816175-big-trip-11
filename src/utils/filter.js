@@ -2,13 +2,13 @@ import {FilterType} from "../const.js";
 
 const getFuturePoints = (points, nowDate) => {
   return points.filter((point) => {
-    return point[`date-from`] > nowDate;
+    return point.dateFrom > nowDate;
   });
 };
 
 const getPastPoints = (points, nowDate) => {
   return points.filter((point) => {
-    return point[`date-to`] < nowDate;
+    return point.dateTo < nowDate;
   });
 };
 

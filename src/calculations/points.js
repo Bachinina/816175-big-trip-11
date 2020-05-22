@@ -1,13 +1,13 @@
 export const sortPointsByTime = (points) => {
   const sortedPoints = points
     .sort((a, b) => {
-      return a[`date-from`].getHours() - b[`date-from`].getHours();
+      return a.dateFrom.getHours() - b.dateFrom.getHours();
     })
     .sort((a, b) => {
-      return a[`date-from`].getDate() - b[`date-from`].getDate();
+      return a.dateFrom.getDate() - b.dateFrom.getDate();
     })
     .sort((a, b) => {
-      return a[`date-from`].getMonth() - b[`date-from`].getMonth();
+      return a.dateFrom.getMonth() - b.dateFrom.getMonth();
     });
   return sortedPoints;
 };
@@ -16,7 +16,7 @@ export const sortPointsByDate = (points) => {
   const arr = [];
 
   sortPointsByTime(points.slice()).forEach((point) => {
-    const pointDate = point[`date-from`];
+    const pointDate = point.dateFrom;
     const indexOfElem = arr.findIndex((item) => {
       return item.date.getDate() === pointDate.getDate() && item.date.getMonth() === pointDate.getMonth();
     });

@@ -6,42 +6,12 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
 
-const parseFormData = (formData, allDestinations, allOffers, type) => {
-
-  const parseDestination = (name) => {
-    return allDestinations.filter((destination) => destination.name === name)[0];
-  };
-
-  const parseOffers = (titlesOfSelectedOffers) => {
-    const offersOfCurrentType = [].concat(...allOffers.filter((offer) => offer.type === type).map((offer) => offer.offers));
-    const selectedOffers = [];
-    offersOfCurrentType.forEach((offer) => {
-      if (titlesOfSelectedOffers.indexOf(offer.title) !== -1) {
-        selectedOffers.push(offer);
-      }
-    });
-    return selectedOffers;
-  };
-
-  return {
-    type: formData.get(`event-type`),
-    [`base-price`]: parseInt(formData.get(`event-price`), 10),
-    [`date-from`]: new Date(formData.get(`event-start-time`)),
-    [`date-to`]: new Date(formData.get(`event-end-time`)),
-    [`destination`]: parseDestination(formData.get(`event-destination`)),
-    id: formData.get(`id`),
-    [`is-favorite`]: !!formData.get(`event-favorite`),
-    [`offers`]: parseOffers(formData.getAll(`event-offer`)),
-  };
-};
-
-
 const createOffersTemplate = (selectedOffers, allOffers) => {
   return allOffers.map((offer, index) => {
     const {title, price} = offer;
     return `<div class="event__offer-selector">
         <input class="event__offer-checkbox  visually-hidden" id="event-offer-${index + 1}" type="checkbox" name="event-offer" value="${title}"
-        ${selectedOffers.indexOf(offer) !== -1 ? `checked` : ``}>
+        ${selectedOffers.map((el) => el.title).indexOf(title) !== -1 ? `checked` : ``}>
         <label class="event__offer-label" for="event-offer-${index + 1}">
           <span class="event__offer-title">${title}</span>
           &plus;
@@ -92,9 +62,9 @@ const createEventTypeListTemplate = (checkedType, id) => {
 const createPointEditTemplate = (mode, point, allDestinationsNames, allOffers, params = {}, options = {}) => {
 
   const {
-    [`base-price`]: price,
+    [`basePrice`]: price,
     id,
-    [`is-favorite`]: isFavorite,
+    isFavorite,
   } = point;
 
   const {type, destination, offers} = params;
@@ -225,8 +195,8 @@ export default class PointEdit extends AbstractSmartComponent {
     this._type = point.type;
     this._offers = point.offers;
     this._destination = point.destination;
-    this._dateFrom = point[`date-from`];
-    this._dateTo = point[`date-to`];
+    this._dateFrom = point.dateFrom;
+    this._dateTo = point.dateTo;
 
 
     this._formSubmitHandler = null;
@@ -250,8 +220,7 @@ export default class PointEdit extends AbstractSmartComponent {
 
   getData() {
     const form = this.getElement().querySelector(`form`);
-    const formData = new FormData(form);
-    return parseFormData(formData, this._allDestinations, this._allOffers, this._type);
+    return new FormData(form);
   }
 
   getTemplate() {

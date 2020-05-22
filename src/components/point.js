@@ -18,9 +18,9 @@ const createOfferTemplate = (offer) => {
 const createPointTemplate = (point) => {
   const {
     type,
-    [`base-price`]: price,
-    [`date-from`]: dateFrom,
-    [`date-to`]: dateTo,
+    [`basePrice`]: price,
+    dateFrom,
+    dateTo,
     destination,
     offers
   } = point;

@@ -10,7 +10,7 @@ export const getTripDestinations = (points) => {
 
 export const getTripDates = (points) => {
   return {
-    start: points[0][`date-from`],
-    finish: points[points.length - 1][`date-to`]
+    start: points[0].dateFrom,
+    finish: points[points.length - 1].dateTo
   };
 };

@@ -28,11 +28,11 @@ const sortPoints = (points, sortType) => {
       break;
 
     case SortType.TIME:
-      sortedPoints = pointsForSort.sort((a, b) => getDiffTime(b[`date-from`], b[`date-to`]) - getDiffTime(a[`date-from`], a[`date-to`]));
+      sortedPoints = pointsForSort.sort((a, b) => getDiffTime(b.dateFrom, b.dateTo) - getDiffTime(a.dateFrom, a.dateTo));
       break;
 
     case SortType.PRICE:
-      sortedPoints = pointsForSort.sort((a, b) => b[`base-price`] - a[`base-price`]);
+      sortedPoints = pointsForSort.sort((a, b) => b.basePrice - a.basePrice);
       break;
   }
   return sortedPoints;
@@ -40,9 +40,10 @@ const sortPoints = (points, sortType) => {
 
 
 export default class TripController {
-  constructor(container, pointsModel) {
+  constructor(container, pointsModel, api) {
     this._pointControllers = [];
     this._pointsModel = pointsModel;
+    this._api = api;
     this._mode = TripControllerMode.DEFAULT;
 
 
@@ -178,15 +179,19 @@ export default class TripController {
     } else if (newData === null) {
       this._pointsModel.removePoint(oldData.id);
     } else {
-      const isSuccess = this._pointsModel.updatePoint(oldData.id, newData);
-      if (isSuccess && openEditForm) {
-        let pointController;
-        const indexOfPointController = this._pointControllers.findIndex((controller) => controller.getPoint() === newData);
-        if (indexOfPointController !== -1) {
-          pointController = this._pointControllers[indexOfPointController];
-        }
-        pointController.render(newData, PointControllerMode.DEFAULT, true);
-      }
+      this._api.updatePoint(oldData.id, newData)
+        .then((pointModel) => {
+          const isSuccess = this._pointsModel.updatePoint(oldData.id, newData);
+
+          if (isSuccess && openEditForm) {
+            let pointController;
+            const indexOfPointController = this._pointControllers.findIndex((controller) => controller.getPoint() === newData);
+            if (indexOfPointController !== -1) {
+              pointController = this._pointControllers[indexOfPointController];
+            }
+            pointController.render(pointModel, PointControllerMode.DEFAULT, true);
+          }
+        });
     }
   }
 
