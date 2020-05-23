@@ -4,6 +4,8 @@ import PointModel from "../models/point.js";
 
 import {render, replace, remove, RenderPosition} from "../utils/render.js";
 
+const SHAKE_ANIMATION_TIMEOUT = 600;
+
 export const Mode = {
   ADDING: `adding`,
   DEFAULT: `default`,
@@ -21,7 +23,6 @@ export const EmptyPoint = {
     "name": ``,
     "pictures": []
   },
-  id: String(new Date() + Math.random()),
   isFavorite: false,
   [`offers`]: [],
 };
@@ -84,10 +85,6 @@ export default class PointController {
     return this._point;
   }
 
-  getMode() {
-    return this._mode;
-  }
-
   render(point, mode, openEditForm = false) {
     this._point = point;
     this._mode = mode;
@@ -101,6 +98,11 @@ export default class PointController {
     this._pointEditComponent.setFormSubmitHandler((evt) => {
       evt.preventDefault();
       const data = parseFormData(this._pointEditComponent.getData(), this._allDestinations, this._allOffers, this._point.type);
+
+      this._pointEditComponent.setData({
+        saveButtonText: `Saving...`,
+      });
+      this._onLoad();
       this._onDataChange(point, data);
     });
 
@@ -114,6 +116,10 @@ export default class PointController {
         });
         this._pointEditComponent.setCloseButtonClickHandler(this._replaceEditToPoint);
         this._pointEditComponent.setDeleteButtonClickHandler(() => {
+          this._pointEditComponent.setData({
+            deleteButtonText: `Deleting...`,
+          });
+          this._onLoad();
           this._onDataChange(point, null);
         });
 
@@ -155,6 +161,28 @@ export default class PointController {
     document.removeEventListener(`keydown`, this._onEscKeyDown);
   }
 
+  onError() {
+    this._pointEditComponent.getElement().querySelector(`form`).classList.add(`onError`);
+    this._pointEditComponent.getElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+    this._pointComponent.getElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+
+    setTimeout(() => {
+      this._pointEditComponent.getElement().style.animation = ``;
+      this._pointComponent.getElement().style.animation = ``;
+
+      this._pointEditComponent.setData({
+        saveButtonText: `Save`,
+        deleteButtonText: `Delete`,
+      });
+    }, SHAKE_ANIMATION_TIMEOUT);
+    this._pointEditComponent.getAllElements().forEach((el) => el.removeAttribute(`disabled`));
+  }
+
+  _onLoad() {
+    this._pointEditComponent.getElement().querySelector(`form`).classList.remove(`onError`);
+    this._pointEditComponent.getAllElements().forEach((el) => el.setAttribute(`disabled`, `disabled`));
+  }
+
   _replaceEditToPoint() {
     document.removeEventListener(`keydown`, this._onEscKeyDown);
     this._pointEditComponent.reset();
@@ -169,7 +197,6 @@ export default class PointController {
     this._onViewChange();
     replace(this._pointEditComponent, this._pointComponent);
     document.addEventListener(`keydown`, this._onEscKeyDown);
-
     this._mode = Mode.EDIT;
   }
 
@@ -185,3 +212,4 @@ export default class PointController {
     }
   }
 }
+

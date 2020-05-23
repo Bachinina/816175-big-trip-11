@@ -27,6 +27,7 @@ export default class StatsController {
 
     this._onDataChange = this._onDataChange.bind(this);
     this._pointsModel.setDataChangeHandler(this._onDataChange);
+    this._pointsModel.setDataLoadHandler(this._onDataChange);
   }
 
   render() {

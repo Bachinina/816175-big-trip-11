@@ -6,6 +6,12 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
 
+const DefaultData = {
+  deleteButtonText: `Delete`,
+  saveButtonText: `Save`,
+};
+
+
 const createOffersTemplate = (selectedOffers, allOffers) => {
   return allOffers.map((offer, index) => {
     const {title, price} = offer;
@@ -62,17 +68,19 @@ const createEventTypeListTemplate = (checkedType, id) => {
 const createPointEditTemplate = (mode, point, allDestinationsNames, allOffers, params = {}, options = {}) => {
 
   const {
-    [`basePrice`]: price,
     id,
     isFavorite,
   } = point;
 
-  const {type, destination, offers} = params;
-  const {isDescription, isPicturesSetExisted, isOffersSetExisted, isFirstPoint = false} = options;
+  const {type, destination, offers, [`basePrice`]: price} = params;
+  const {isDescription, isPicturesSetExisted, isOffersSetExisted, isFirstPoint = false, externalData} = options;
   const {description, name, pictures} = destination;
   const offersOfCurrentType = [].concat(...allOffers.filter((offer) => offer.type === type).map((offer) => offer.offers));
 
   const pointTitle = `${type} ${EventType.TRANSFER.has(type) ? `to ` : `in `}`;
+
+  const deleteButtonText = externalData.deleteButtonText;
+  const saveButtonText = externalData.saveButtonText;
 
   return `<li class="trip-events__item">
   <form class="trip-events__item  event  event--edit" action="#" method="post">
@@ -120,8 +128,8 @@ const createPointEditTemplate = (mode, point, allDestinationsNames, allOffers, p
           <input class="event__input  event__input--price" id="event-price-${id}" type="number" name="event-price" value="${price}" required  autocomplete="off" step="1" min="0">
         </div>
 
-        <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-        <button class="event__reset-btn" type="reset">${mode === PointControllerMode.ADDING ? `Cancel` : `Delete`}</button>
+        <button class="event__save-btn  btn  btn--blue" type="submit">${saveButtonText}</button>
+        <button class="event__reset-btn" type="reset">${mode === PointControllerMode.ADDING ? `Cancel` : `${deleteButtonText}`}</button>
 
         ${mode === PointControllerMode.ADDING ? `` : `
           <input id="event-favorite-${id}" class="event__favorite-checkbox  visually-hidden" type="checkbox" name="event-favorite"
@@ -197,6 +205,8 @@ export default class PointEdit extends AbstractSmartComponent {
     this._destination = point.destination;
     this._dateFrom = point.dateFrom;
     this._dateTo = point.dateTo;
+    this._basePrice = point.basePrice;
+    this._externalData = DefaultData;
 
 
     this._formSubmitHandler = null;
@@ -220,7 +230,10 @@ export default class PointEdit extends AbstractSmartComponent {
 
   getData() {
     const form = this.getElement().querySelector(`form`);
-    return new FormData(form);
+    const formData = new FormData(form);
+    this._basePrice = this._mode === PointControllerMode.DEFAULT ? this._basePrice : parseInt(formData.get(`event-price`), 10);
+
+    return formData;
   }
 
   getTemplate() {
@@ -230,15 +243,23 @@ export default class PointEdit extends AbstractSmartComponent {
           type: this._type,
           offers: this._offers,
           destination: this._destination,
+          basePrice: this._basePrice,
         },
         // Options
         {
           isDescription: !!this._destination.description,
           isPicturesSetExisted: this._destination.pictures.length > 0,
           isOffersSetExisted: [].concat(...this._allOffers.filter((offer) => offer.type === this._type).map((offer) => offer.offers)).length > 0,
-          isFirstPoint: this._mode === PointControllerMode.ADDING && this._pointsModel.getPoints().length === 0
+          isFirstPoint: this._mode === PointControllerMode.ADDING && this._pointsModel.getPoints().length === 0,
+          externalData: this._externalData
         }
     );
+  }
+
+  getAllElements() {
+    const inputs = this.getElement().querySelectorAll(`input`);
+    const buttons = this.getElement().querySelectorAll(`button`);
+    return [].concat([...inputs], [...buttons]);
   }
 
   rerender() {
@@ -266,6 +287,11 @@ export default class PointEdit extends AbstractSmartComponent {
     this.setFavoriteButtonClickHandler(this._favoritesButtonClickHandler);
     this.setDeleteButtonClickHandler(this._deleteButtonClickHandler);
     this._subscribeOnEvents();
+  }
+
+  setData(data) {
+    this._externalData = Object.assign({}, DefaultData, data);
+    this.rerender();
   }
 
   setFormSubmitHandler(cb) {

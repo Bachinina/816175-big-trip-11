@@ -16,6 +16,7 @@ export default class Points {
     this._destinations = [];
     this._activeFilterType = FilterType.EVERY;
 
+    this._dataLoadHandlers = [];
     this._dataChangeHandlers = [];
     this._filterChangeHandlers = [];
     this._pointCreateHandlers = [];
@@ -44,9 +45,7 @@ export default class Points {
     this._offers = offers;
   }
 
-  setPoints(points) {
-    this._points = sortPointsByTime(points);
-
+  calcInfo() {
     if (this._points.length > 0) {
       this._datesOfTrip = getTripDates(this._points);
       this._tripDestinations = getTripDestinations(this._points);
@@ -56,7 +55,18 @@ export default class Points {
       this._tripDestinations = null;
       this._totalPrice = 0;
     }
+  }
+
+  setPoints(points) {
+    this._points = sortPointsByTime(points);
+    this.calcInfo();
     this._callHandlers(this._dataChangeHandlers);
+  }
+
+  setLoadedPoints(points) {
+    this._points = sortPointsByTime(points);
+    this.calcInfo();
+    this._callHandlers(this._dataLoadHandlers);
   }
 
   setFilter(filterType) {
@@ -74,6 +84,10 @@ export default class Points {
 
   setDataChangeHandler(cb) {
     this._dataChangeHandlers.push(cb);
+  }
+
+  setDataLoadHandler(cb) {
+    this._dataLoadHandlers.push(cb);
   }
 
   setFilterChangeHandler(cb) {

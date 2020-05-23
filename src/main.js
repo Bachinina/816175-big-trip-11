@@ -9,16 +9,18 @@ import TripController from './controllers/trip.js';
 import {render, RenderPosition} from "./utils/render.js";
 
 const AUTHORIZATION = `Basic dXNlcDbmDJHDjo=`;
+const END_POINT = `https://11.ecmascript.pages.academy/big-trip`;
 const pointsModel = new PointsModel();
+
+
+const pointsListBlock = document.querySelector(`.trip-events`);
+const api = new API(END_POINT, AUTHORIZATION, pointsListBlock);
+
 
 const headerMainBlock = document.querySelector(`.trip-main`);
 const menuBlock = headerMainBlock.querySelector(`#menu-block`);
 const filterBlock = headerMainBlock.querySelector(`#events-filter`);
-const pointsListBlock = document.querySelector(`.trip-events`);
 const statsListBlock = document.querySelector(`.statistics`);
-
-
-const api = new API(AUTHORIZATION, pointsListBlock);
 
 
 const menuComponent = new MenuComponent(MenuMode.TABLE);
@@ -27,7 +29,6 @@ const pointAddBtnController = new PointAddBtnController(headerMainBlock, pointsM
 const filterController = new FilterController(filterBlock, pointsModel);
 const tripController = new TripController(pointsListBlock, pointsModel, api);
 const statistics = new StatsController(statsListBlock, pointsModel);
-
 
 render(menuBlock, menuComponent, RenderPosition.AFTEREND);
 infoController.render();
@@ -76,6 +77,7 @@ const loadOffers = () => {
       api.onError(`Ooops, SPA can't fetch offer list :(`);
     });
 };
+
 const loadInfo = Promise.all([loadDestinations(), loadOffers()]);
 
 loadInfo
@@ -85,7 +87,7 @@ loadInfo
       .then((points) => {
         if (points) {
           api.onLoad();
-          pointsModel.setPoints(points);
+          pointsModel.setLoadedPoints(points);
           infoController.render();
           filterController.render();
           pointAddBtnController.render();

@@ -19,7 +19,8 @@ const checkStatus = (response) => {
 };
 
 const API = class {
-  constructor(authorization, container) {
+  constructor(endPoint, authorization, container) {
+    this._endPoint = endPoint;
     this._authorization = authorization;
     this._container = container;
 
@@ -27,11 +28,7 @@ const API = class {
   }
 
   getPoints() {
-    const headers = new Headers();
-    headers.append(`Authorization`, this._authorization);
-
-    return fetch(`https://11.ecmascript.pages.academy/big-trip/points`, {headers})
-      .then(checkStatus)
+    return this._load({url: `points`})
       .then((response) => {
         if (response.status === 404) {
           return [];
@@ -40,28 +37,24 @@ const API = class {
         }
       })
       .then(Point.parsePoints);
-
   }
 
   getDestinations() {
-    const headers = new Headers();
-    headers.append(`Authorization`, this._authorization);
-
-    return fetch(`https://11.ecmascript.pages.academy/big-trip/destinations`, {headers})
+    return this._load({url: `destinations`})
       .then(checkStatus)
       .then((response) => response.json());
   }
 
   getOffers() {
-    const headers = new Headers();
-    headers.append(`Authorization`, this._authorization);
-
-    return fetch(`https://11.ecmascript.pages.academy/big-trip/offers`, {headers})
+    return this._load({url: `offers`})
       .then(checkStatus)
       .then((response) => response.json());
   }
 
   onError(error) {
+    if (this._container.contains(this._container.querySelector(`.trip-events__msg--load`))) {
+      this._container.querySelector(`.trip-events__msg--load`).remove();
+    }
     error = `<p class="trip-events__msg">${error}</p>`;
     this._container.insertAdjacentHTML(RenderPosition.BEFOREEND, error);
   }
@@ -76,18 +69,40 @@ const API = class {
     }
   }
 
-  updatePoint(id, data) {
-    const headers = new Headers();
-    headers.append(`Authorization`, this._authorization);
-    headers.append(`Content-Type`, `application/json`);
-
-    return fetch(`https://11.ecmascript.pages.academy/big-trip/points/${id}`, {
-      method: Method.PUT,
+  createPoint(data) {
+    return this._load({
+      url: `points`,
+      method: Method.POST,
       body: JSON.stringify(data.toRAW()),
-      headers,
+      headers: new Headers({"Content-Type": `application/json`})
     })
       .then((response) => response.json())
       .then(Point.parsePoint);
+  }
+
+  updatePoint(id, data) {
+    return this._load({
+      url: `points/${id}`,
+      method: Method.PUT,
+      body: JSON.stringify(data.toRAW()),
+      headers: new Headers({"Content-Type": `application/json`})
+    })
+      .then((response) => response.json())
+      .then(Point.parsePoint);
+  }
+
+  deletePoint(id) {
+    return this._load({url: `points/${id}`, method: Method.DELETE});
+  }
+
+  _load({url, method = Method.GET, body = null, headers = new Headers()}) {
+    headers.append(`Authorization`, this._authorization);
+
+    return fetch(`${this._endPoint}/${url}`, {method, body, headers})
+      .then(checkStatus)
+      .catch((err) => {
+        throw err;
+      });
   }
 };
 
