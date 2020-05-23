@@ -222,8 +222,7 @@ export default class PointEdit extends AbstractSmartComponent {
       altInput: true,
       altFormat: `d/m/y H:i`,
       allowInput: true,
-      enableTime: true,
-      time_24hr: true // eslint-disable-line
+      enableTime: true
     };
     this._applyFlatpickr();
   }
