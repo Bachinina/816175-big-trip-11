@@ -162,8 +162,18 @@ export default class TripController {
   // ------------------------------------------------
 
   _onDataChange(oldData, newData, openEditForm = false) {
-    if (oldData === EmptyPoint) {
 
+    const findController = (data) => {
+      let pointController;
+      const indexOfPointController = this._pointControllers.findIndex((controller) => controller.getPoint() === data);
+      if (indexOfPointController !== -1) {
+        pointController = this._pointControllers[indexOfPointController];
+      }
+      return pointController;
+    };
+
+
+    if (oldData === EmptyPoint) {
       this._mode = this._pointsModel.getPoints().length > 0
         ? TripControllerMode.DEFAULT
         : TripControllerMode.NO_POINTS;
@@ -172,25 +182,35 @@ export default class TripController {
         this._onPointCreateDelete();
         this._update();
       } else {
-        this._pointsModel.addPoint(newData);
-        this._creatingPoint.destroy();
-        this._creatingPoint = null;
+        this._api.createPoint(newData)
+        .then(() => {
+          this._pointsModel.addPoint(newData);
+          this._creatingPoint.destroy();
+          this._creatingPoint = null;
+        })
+        .catch(() => {
+          this._creatingPoint.onError();
+        });
       }
     } else if (newData === null) {
-      this._pointsModel.removePoint(oldData.id);
+      this._api.deletePoint(oldData.id)
+        .then(() => {
+          this._pointsModel.removePoint(oldData.id);
+        })
+        .catch(() => {
+          findController(oldData).onError();
+        });
     } else {
       this._api.updatePoint(oldData.id, newData)
         .then((pointModel) => {
           const isSuccess = this._pointsModel.updatePoint(oldData.id, newData);
 
           if (isSuccess && openEditForm) {
-            let pointController;
-            const indexOfPointController = this._pointControllers.findIndex((controller) => controller.getPoint() === newData);
-            if (indexOfPointController !== -1) {
-              pointController = this._pointControllers[indexOfPointController];
-            }
-            pointController.render(pointModel, PointControllerMode.DEFAULT, true);
+            findController(newData).render(pointModel, PointControllerMode.DEFAULT, true);
           }
+        })
+        .catch(() => {
+          findController(oldData).onError();
         });
     }
   }
