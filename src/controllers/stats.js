@@ -43,7 +43,10 @@ export default class StatsController {
     } else {
       render(this._container, this._statsComponent, RenderPosition.BEFOREEND);
     }
-    this.calc();
+
+    if (this._pointsModel.getPoints().length > 0) {
+      this.calc();
+    }
   }
 
   calc() {
@@ -324,7 +327,6 @@ export default class StatsController {
   }
 
   _onDataChange() {
-    this.calc();
     this.render();
   }
 }

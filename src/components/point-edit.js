@@ -5,6 +5,9 @@ import {EventType} from "../const.js";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
+const isOnline = () => {
+  return window.navigator.onLine;
+};
 
 const DefaultData = {
   deleteButtonText: `Delete`,
@@ -170,7 +173,7 @@ const createPointEditTemplate = (mode, point, allDestinationsNames, allOffers, p
                 ${isPicturesSetExisted ? `
                   <div class="event__photos-container">
                     <div class="event__photos-tape">
-                      ${createPhotosTemplate(pictures)}
+                      ${isOnline() ? createPhotosTemplate(pictures) : `<p class="event__destination-description"><i>Images will appear as soon as the Internet is available</i></p>`}
                     </div>
                   </div>
                 ` : ``}

@@ -2,6 +2,11 @@ const CACHE_PREFIX = `bigtrip-cache`;
 const CACHE_VER = `v1`;
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VER}`;
 
+const StatusCode = {
+  OK: 200,
+};
+
+
 self.addEventListener(`install`, (evt) => {
   evt.waitUntil(
       caches.open(CACHE_NAME)
@@ -65,16 +70,14 @@ self.addEventListener(`fetch`, (evt) => {
             return cacheResponse;
           }
 
-          // Если в кэше не нашёлся ответ,
-          // повторно вызываем fetch
-          // с тем же запросом (request),
-          // и возвращаем его
+          // Если в кэше не нашёлся ответ, повторно вызываем fetch
+          // с тем же запросом (request), и возвращаем его
           return fetch(request)
             .then((response) => {
               // Если ответа нет, или ответ со статусом отличным от 200 OK,
               // или ответ небезопасного типа (не basic), тогда просто передаём
               // ответ дальше, никак не обрабатываем
-              if (!response || response.status !== 200 || response.type !== `basic`) {
+              if (!response || response.status !== StatusCode.OK || response.type !== `basic`) {
                 return response;
               }
 
