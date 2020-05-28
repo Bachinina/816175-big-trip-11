@@ -227,6 +227,10 @@ export default class PointEdit extends AbstractSmartComponent {
     this._applyFlatpickr();
   }
 
+  getType() {
+    return this._type;
+  }
+
   getData() {
     const form = this.getElement().querySelector(`form`);
     const formData = new FormData(form);

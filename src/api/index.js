@@ -1,5 +1,5 @@
-import Point from "./models/point.js";
-import {RenderPosition} from "./utils/render.js";
+import Point from "../models/point.js";
+import {RenderPosition} from "../utils/render.js";
 
 
 const Method = {
@@ -9,9 +9,15 @@ const Method = {
   DELETE: `DELETE`
 };
 
+const StatusCode = {
+  OK: 200,
+  MultipleChoices: 300,
+  NotFound: 404,
+};
+
 
 const checkStatus = (response) => {
-  if (response.status >= 200 && response.status < 300) {
+  if (response.status >= StatusCode.OK && response.status < StatusCode.MultipleChoices) {
     return response;
   } else {
     throw new Error(`${response.status}: ${response.statusText}`);
@@ -30,7 +36,7 @@ const API = class {
   getPoints() {
     return this._load({url: `points`})
       .then((response) => {
-        if (response.status === 404) {
+        if (response.status === StatusCode.NotFound) {
           return [];
         } else {
           return response.json();

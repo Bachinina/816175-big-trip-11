@@ -36,6 +36,7 @@ const parseFormData = (formData, allDestinations, allOffers, type) => {
   const parseOffers = (titlesOfSelectedOffers) => {
     const offersOfCurrentType = [].concat(...allOffers.filter((offer) => offer.type === type).map((offer) => offer.offers));
     const selectedOffers = [];
+
     offersOfCurrentType.forEach((offer) => {
       if (titlesOfSelectedOffers.indexOf(offer.title) !== -1) {
         selectedOffers.push(offer);
@@ -97,8 +98,7 @@ export default class PointController {
 
     this._pointEditComponent.setFormSubmitHandler((evt) => {
       evt.preventDefault();
-      const data = parseFormData(this._pointEditComponent.getData(), this._allDestinations, this._allOffers, this._point.type);
-
+      const data = parseFormData(this._pointEditComponent.getData(), this._allDestinations, this._allOffers, this._pointEditComponent.getType());
       this._pointEditComponent.setData({
         saveButtonText: `Saving...`,
       });
