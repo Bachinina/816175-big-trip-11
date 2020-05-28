@@ -183,8 +183,8 @@ export default class TripController {
         this._update();
       } else {
         this._api.createPoint(newData)
-        .then(() => {
-          this._pointsModel.addPoint(newData);
+        .then((newPoint) => {
+          this._pointsModel.addPoint(newPoint);
           this._creatingPoint.destroy();
           this._creatingPoint = null;
         })

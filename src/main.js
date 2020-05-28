@@ -1,4 +1,4 @@
-import API from "./api.js";
+import API from "./api/index.js";
 import FilterController from './controllers/filter.js';
 import InfoController from './controllers/info.js';
 import MenuComponent, {MenuMode} from './components/menu.js';
@@ -104,3 +104,9 @@ loadInfo
   })
   .then(api.onLoad);
 // -------------------------------------
+
+
+// Offline
+window.addEventListener(`load`, () => {
+  navigator.serviceWorker.register(`/sw.js`);
+});
